@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Login.css';
 
-export default function Login({ onNavigate }) {
+export default function Login({ onNavigate, onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -9,6 +9,7 @@ export default function Login({ onNavigate }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Login attempt with:', { email, password, rememberMe });
+    onLoginSuccess({ email });
   };
 
   return (

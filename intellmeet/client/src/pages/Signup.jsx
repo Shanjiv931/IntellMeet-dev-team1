@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Signup.css';
 
-export default function Signup({ onNavigate }) {
+export default function Signup({ onNavigate, onSignupSuccess }) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,6 +16,7 @@ export default function Signup({ onNavigate }) {
     }
     setError('');
     console.log('Signup attempt with:', { fullName, email, password });
+    onSignupSuccess({ name: fullName, email });
   };
 
   return (
