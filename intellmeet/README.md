@@ -94,9 +94,13 @@ Follow this guide to host IntellMeet completely online without using `localhost`
 ### 📡 1. MongoDB Atlas (Cloud Database) Setup
 To host your MongoDB sharded clusters completely online:
 1. Sign up for a free tier at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
-2. Create a new Shared Cluster and navigate to **Security** -> **Network Access**.
-3. **CRITICAL STEP**: Click **Add IP Address** and choose **Allow Access From Anywhere** (`0.0.0.0/0`). This is mandatory so that cloud hosting providers (e.g. Render, Railway) with dynamic outbound IPs can connect successfully.
-4. Go to **Database Access** and create an administrator user with read/write privileges.
+2. Create a new Shared Cluster and navigate to **Security** -> **Network Access** (or complete the **Security Quickstart** upon database setup).
+3. **CRITICAL STEP (Network Whitelisting)**:
+   * Under **Where would you like to connect from?**, navigate to the **IP Access List** section.
+   * In the **IP Address** box, enter **`0.0.0.0/0`** (or click **"Allow Access from Anywhere"** to automatically populate it).
+   * In the **Description** box, enter **`Render Outbound Access`** (or `Access from anywhere`).
+   * Click **Confirm** or **Add Entry** to commit this firewall rule to your cluster shards. This is mandatory so that cloud hosting providers (e.g. Render, Vercel) with dynamic outbound IPs can connect successfully.
+4. Go to **Database Access** and create an administrator user with read/write privileges (Authentication Type: Password).
 5. **Special Password Character Encoding**: If your database password contains special characters (e.g. `$`, `@`, `#`), you **MUST** URL-encode them inside your connection string. 
    * *Example*: A password of `my$Password` becomes `my%24Password`.
 6. Retrieve your Connection String:
