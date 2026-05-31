@@ -24,13 +24,12 @@ export default function Dashboard({ onNavigate, user = { name: "Product Manager"
     <div className="dashboard-layout">
       <Sidebar 
         onNavigate={onNavigate} 
-        onLogout={() => setShowLogoutModal(true)} 
         currentTab={currentTab} 
         setCurrentTab={setCurrentTab} 
       />
       
       <div className="dashboard-main">
-        <DashboardNavbar user={user} />
+        <DashboardNavbar user={user} onLogout={() => setShowLogoutModal(true)} />
         
         <div className="dashboard-content container">
           {/* Header Row */}

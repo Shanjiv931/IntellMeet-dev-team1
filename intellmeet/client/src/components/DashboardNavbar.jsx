@@ -1,7 +1,7 @@
 import React from 'react';
 import './DashboardNavbar.css';
 
-export default function DashboardNavbar({ user = { name: "Product Manager", role: "Team Member", avatar: "PM" } }) {
+export default function DashboardNavbar({ user = { name: "Product Manager", role: "Team Member", avatar: "PM" }, onLogout }) {
   return (
     <header className="db-navbar">
       {/* Search box */}
@@ -25,6 +25,9 @@ export default function DashboardNavbar({ user = { name: "Product Manager", role
             <span className="user-name">{user.name}</span>
             <span className="user-role">{user.role}</span>
           </div>
+          <button className="btn-profile-logout" onClick={onLogout} title="Logout">
+            Logout
+          </button>
         </div>
       </div>
     </header>
