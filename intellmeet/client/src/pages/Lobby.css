@@ -295,3 +295,14 @@
     gap: 36px;
   }
 }
+
+@media (max-width: 480px) {
+  .details-card {
+    padding: 20px;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
