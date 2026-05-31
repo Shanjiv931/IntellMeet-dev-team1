@@ -10,10 +10,12 @@ const router = Router();
  */
 router.post('/register', authRateLimiter, authController.register);
 router.post('/login', authRateLimiter, authController.login);
+router.post('/refresh', authRateLimiter, authController.refresh);
 
 /**
  * Protected Authentication Routes (Requires valid Bearer JWT header authorization)
  */
 router.get('/me', authenticateJWT, authController.getMe);
+router.post('/avatar', authenticateJWT, authController.uploadAvatar);
 
 export default router;

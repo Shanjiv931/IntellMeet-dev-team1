@@ -1,104 +1,208 @@
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 import User from '../models/User.model.js';
 import AppError from '../utils/AppError.js';
-import { generateAccessToken, generateRefreshToken } from '../utils/jwt.utils.js';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.utils.js';
+import logger from '../utils/logger.js';
+
+// Resilient in-memory database store for users when MongoDB is offline
+const memoryUsers = [];
+
+const isDBConnected = () => mongoose.connection.readyState === 1;
 
 /**
- * Register a new user in MongoDB Atlas
- * @param {object} userData - Registration parameters (name, email, password, role)
- * @returns {object} Clean user metadata and session tokens
+ * Register a new user in MongoDB Atlas (with in-memory fallback)
  */
 export const registerUser = async ({ name, email, password, role }) => {
-  // Validate if email already exists
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  if (isDBConnected()) {
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      throw new AppError('Email address is already registered in the system.', 409);
+    }
+
+    const newUser = await User.create({
+      name,
+      email: normalizedEmail,
+      password,
+      role: role || 'MEMBER',
+    });
+
+    const userResponse = {
+      id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      createdAt: newUser.createdAt,
+    };
+
+    const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
+
+    return {
+      user: userResponse,
+      tokens: { accessToken, refreshToken },
+    };
+  }
+
+  // Memory mode fallback
+  const existingMemoryUser = memoryUsers.find(u => u.email === normalizedEmail);
+  if (existingMemoryUser) {
     throw new AppError('Email address is already registered in the system.', 409);
   }
 
-  // Create new user (triggers pre-save hashing)
-  const newUser = await User.create({
-    name,
-    email,
-    password,
-    role: role || 'MEMBER', // Default is MEMBER, but supports custom role assignments
-  });
+  // Hash password using bcryptjs manually for local memory storage
+  const salt = await bcrypt.genSalt(12);
+  const hashedPassword = await bcrypt.hash(password, salt);
 
-  // Strip password from returned metadata
-  const userResponse = {
-    id: newUser._id,
-    name: newUser.name,
-    email: newUser.email,
-    role: newUser.role,
-    createdAt: newUser.createdAt,
+  const mockUser = {
+    _id: new mongoose.Types.ObjectId().toString(),
+    name,
+    email: normalizedEmail,
+    password: hashedPassword,
+    role: role || 'MEMBER',
+    createdAt: new Date(),
+    updatedAt: new Date()
   };
 
-  // Generate Session Tokens
-  const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
+  memoryUsers.push(mockUser);
+  logger.info(`Resilient DB Fallback: Registered user in-memory: ${mockUser._id}`);
+
+  const userResponse = {
+    id: mockUser._id,
+    name: mockUser.name,
+    email: mockUser.email,
+    role: mockUser.role,
+    createdAt: mockUser.createdAt
+  };
+
+  const payload = { id: mockUser._id, email: mockUser.email, role: mockUser.role };
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
   return {
     user: userResponse,
-    tokens: {
-      accessToken,
-      refreshToken,
-    },
+    tokens: { accessToken, refreshToken }
   };
 };
 
 /**
- * Login a user by validating their credentials
- * @param {object} credentials - Login parameters (email, password)
- * @returns {object} Clean user metadata and session tokens
+ * Login a user by validating credentials (with in-memory fallback)
  */
 export const loginUser = async ({ email, password }) => {
   if (!email || !password) {
     throw new AppError('Please provide both email and password to log in.', 400);
   }
 
-  // Fetch user explicitly selecting the password field (since it is unselected by default)
-  const user = await User.findOne({ email }).select('+password');
+  const normalizedEmail = email.toLowerCase().trim();
+
+  if (isDBConnected()) {
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    if (!user) {
+      throw new AppError('Invalid email or password. Please try again.', 401);
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      throw new AppError('Invalid email or password. Please try again.', 401);
+    }
+
+    const userResponse = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+    };
+
+    const payload = { id: user._id, email: user.email, role: user.role };
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
+
+    return {
+      user: userResponse,
+      tokens: { accessToken, refreshToken },
+    };
+  }
+
+  // Memory mode fallback
+  const user = memoryUsers.find(u => u.email === normalizedEmail);
   if (!user) {
     throw new AppError('Invalid email or password. Please try again.', 401);
   }
 
-  // Compare candidate password with database hash
-  const isMatch = await user.comparePassword(password);
+  const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     throw new AppError('Invalid email or password. Please try again.', 401);
   }
 
-  // Strip password from returned metadata
+  logger.info(`Resilient DB Fallback: User login verified in-memory: ${user._id}`);
+
   const userResponse = {
     id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
-    createdAt: user.createdAt,
+    createdAt: user.createdAt
   };
 
-  // Generate Session Tokens
   const payload = { id: user._id, email: user.email, role: user.role };
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
   return {
     user: userResponse,
-    tokens: {
-      accessToken,
-      refreshToken,
-    },
+    tokens: { accessToken, refreshToken }
   };
 };
 
 /**
- * Fetch a user profile by MongoDB ObjectId
- * @param {string} userId - Target User ID
- * @returns {object} Clean Mongoose user document
+ * Fetch user profile by ID
  */
 export const getUserById = async (userId) => {
-  const user = await User.findById(userId);
+  if (isDBConnected()) {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError('Requested user session could not be found.', 404);
+    }
+    return user;
+  }
+
+  // Memory mode fallback
+  const user = memoryUsers.find(u => u._id.toString() === userId.toString());
   if (!user) {
     throw new AppError('Requested user session could not be found.', 404);
   }
   return user;
+};
+
+/**
+ * Refresh user access and refresh tokens
+ */
+export const refreshUserTokens = async (refreshToken) => {
+  try {
+    const decoded = verifyRefreshToken(refreshToken);
+    const user = await getUserById(decoded.id);
+
+    const payload = { id: user._id || user.id, email: user.email, role: user.role };
+    const newAccessToken = generateAccessToken(payload);
+    const newRefreshToken = generateRefreshToken(payload);
+
+    return {
+      user: {
+        id: user._id || user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      tokens: {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      },
+    };
+  } catch (err) {
+    throw new AppError('Invalid or expired refresh token. Please sign in again.', 401);
+  }
 };

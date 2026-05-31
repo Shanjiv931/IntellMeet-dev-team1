@@ -23,8 +23,8 @@ export const initSocket = (httpServer) => {
       methods: ['GET', 'POST'],
       credentials: true,
     },
-    pingTimeout: 60000, // 60 seconds ping timeout
-    pingInterval: 25000, // 25 seconds ping interval
+    pingTimeout: 60000,
+    pingInterval: 25000,
   });
 
   // Global socket namespace connection listener
@@ -54,8 +54,59 @@ export const initSocket = (httpServer) => {
         message: `Client ${socket.id} joined the room.`,
       });
 
-      // Confirm success to current client
-      socket.emit('joined-room-success', { roomId });
+      // Retrieve all other active socket IDs currently in this room to enable WebRTC mesh initialization
+      const roomClients = Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+        .filter(id => id !== socket.id);
+
+      // Confirm success to current client, passing other active peers
+      socket.emit('joined-room-success', { 
+        roomId, 
+        activePeers: roomClients 
+      });
+    });
+
+    /**
+     * WebRTC Mesh Signaling Handshakes
+     */
+    socket.on('webrtc-offer', ({ targetId, offer }) => {
+      if (!targetId || !offer) return;
+      logger.debug(`Relaying WebRTC SDP offer from ${socket.id} to peer ${targetId}`);
+      io.to(targetId).emit('webrtc-offer', {
+        senderId: socket.id,
+        offer
+      });
+    });
+
+    socket.on('webrtc-answer', ({ targetId, answer }) => {
+      if (!targetId || !answer) return;
+      logger.debug(`Relaying WebRTC SDP answer from ${socket.id} to peer ${targetId}`);
+      io.to(targetId).emit('webrtc-answer', {
+        senderId: socket.id,
+        answer
+      });
+    });
+
+    socket.on('webrtc-candidate', ({ targetId, candidate }) => {
+      if (!targetId || !candidate) return;
+      logger.debug(`Relaying WebRTC ICE candidate from ${socket.id} to peer ${targetId}`);
+      io.to(targetId).emit('webrtc-candidate', {
+        senderId: socket.id,
+        candidate
+      });
+    });
+
+    /**
+     * Peer Media Controls Sync: Syncs camera, microphone, and screen share events
+     */
+    socket.on('peer-media-toggle', ({ roomId, isMuted, isCameraOff, isSharingScreen }) => {
+      if (!roomId) return;
+      logger.debug(`Syncing media toggles from ${socket.id} to room ${roomId}`);
+      socket.to(roomId).emit('peer-media-toggled', {
+        senderId: socket.id,
+        isMuted,
+        isCameraOff,
+        isSharingScreen
+      });
     });
 
     /**

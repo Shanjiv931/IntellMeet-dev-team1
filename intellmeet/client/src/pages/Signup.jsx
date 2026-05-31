@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../utils/api';
 import './Signup.css';
 
 export default function Signup({ onNavigate, onSignupSuccess }) {
@@ -7,16 +8,30 @@ export default function Signup({ onNavigate, onSignupSuccess }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
     setError('');
-    console.log('Signup attempt with:', { fullName, email, password });
-    onSignupSuccess({ name: fullName, email });
+    setLoading(true);
+
+    try {
+      const response = await api.post('/auth/register', { 
+        name: fullName, 
+        email, 
+        password,
+        role: 'MEMBER'
+      });
+      onSignupSuccess(response.data);
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,6 +66,7 @@ export default function Signup({ onNavigate, onSignupSuccess }) {
                 placeholder="Jane Cooper"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -63,6 +79,7 @@ export default function Signup({ onNavigate, onSignupSuccess }) {
                 placeholder="you@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -75,6 +92,7 @@ export default function Signup({ onNavigate, onSignupSuccess }) {
                 placeholder="Min. 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -87,10 +105,13 @@ export default function Signup({ onNavigate, onSignupSuccess }) {
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
 
-            <button type="submit" className="btn-signup-submit">Create Account</button>
+            <button type="submit" className="btn-signup-submit" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </button>
           </form>
 
           <p className="login-prompt">

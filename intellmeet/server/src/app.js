@@ -4,6 +4,7 @@ import cors from 'cors';
 import env from './config/env.js';
 import logger from './utils/logger.js';
 import authRoutes from './routes/auth.routes.js';
+import meetingRoutes from './routes/meeting.routes.js';
 import errorMiddleware from './middleware/error.middleware.js';
 import AppError from './utils/AppError.js';
 import { apiRateLimiter } from './middleware/rateLimit.middleware.js';
@@ -44,6 +45,9 @@ app.use('/api', apiRateLimiter);
 
 // Register Core Authentication Routes
 app.use('/api/auth', authRoutes);
+
+// Register Core Meeting CRUD Routes
+app.use('/api/meetings', meetingRoutes);
 
 // Fallback Route Handler for undefined endpoints
 app.all('*', (req, res, next) => {

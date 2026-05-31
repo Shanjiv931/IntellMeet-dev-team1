@@ -1,15 +1,27 @@
 import React, { useState } from 'react';
+import api from '../utils/api';
 import './Login.css';
 
 export default function Login({ onNavigate, onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login attempt with:', { email, password, rememberMe });
-    onLoginSuccess({ email });
+    setError('');
+    setLoading(true);
+    
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      onLoginSuccess(response.data);
+    } catch (err) {
+      setError(err.message || 'Invalid email or password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,6 +44,8 @@ export default function Login({ onNavigate, onLoginSuccess }) {
           <h2>Welcome back</h2>
           <p className="subtitle">Enter your credentials to access your meeting dashboard</p>
 
+          {error && <div className="error-alert-box">{error}</div>}
+
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
               <label htmlFor="email">Email Address</label>
@@ -42,6 +56,7 @@ export default function Login({ onNavigate, onLoginSuccess }) {
                 placeholder="you@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -57,6 +72,7 @@ export default function Login({ onNavigate, onLoginSuccess }) {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -66,12 +82,15 @@ export default function Login({ onNavigate, onLoginSuccess }) {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={loading}
                 />
                 <span>Remember me for 30 days</span>
               </label>
             </div>
 
-            <button type="submit" className="btn-signin-submit">Sign In</button>
+            <button type="submit" className="btn-signin-submit" disabled={loading}>
+              {loading ? 'Signing In...' : 'Sign In'}
+            </button>
           </form>
 
           <p className="signup-prompt">
