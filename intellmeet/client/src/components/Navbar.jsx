@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import './Navbar.css';
 
-export default function Navbar() {
+export default function Navbar({ onNavigate }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <nav className="navbar">
       <div className="container nav-container">
-        <a href="#" className="nav-logo">
+        <a href="#" className="nav-logo" onClick={(e) => { e.preventDefault(); onNavigate('landing'); }}>
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="32" height="32" rx="8" fill="#2563EB"/>
             <path d="M10 12C10 10.8954 10.8954 10 12 10H20C21.1046 10 22 10.8954 22 12V20C22 21.1046 21.1046 22 20 22H12C10.8954 22 10 21.1046 10 20V12Z" fill="white"/>
@@ -25,8 +25,8 @@ export default function Navbar() {
         </div>
 
         <div className="nav-actions">
-          <button className="btn-signin">Sign In</button>
-          <button className="btn-signup">Get Started Free</button>
+          <button className="btn-signin" onClick={() => onNavigate('login')}>Sign In</button>
+          <button className="btn-signup" onClick={() => onNavigate('login')}>Get Started Free</button>
         </div>
 
         <button className="nav-toggle" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
