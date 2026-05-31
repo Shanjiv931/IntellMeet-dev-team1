@@ -20,8 +20,7 @@ export default function Lobby({ onNavigate, user }) {
 
   const handleJoin = (e) => {
     e.preventDefault();
-    alert("Connecting to meeting servers...");
-    onNavigate('dashboard');
+    onNavigate('room');
   };
 
   return (

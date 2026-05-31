@@ -4,9 +4,10 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Lobby from './pages/Lobby';
+import Room from './pages/Room';
 
 function App() {
-  const [view, setView] = useState('landing'); // 'landing', 'login', 'signup', 'dashboard', or 'lobby'
+  const [view, setView] = useState('landing'); // 'landing', 'login', 'signup', 'dashboard', 'lobby', or 'room'
   const [currentUser, setCurrentUser] = useState({ name: "Product Manager", role: "Team Member", avatar: "PM" });
 
   const handleNavigate = (targetView) => {
@@ -45,6 +46,10 @@ function App() {
 
   if (view === 'lobby') {
     return <Lobby onNavigate={handleNavigate} user={currentUser} />;
+  }
+
+  if (view === 'room') {
+    return <Room onNavigate={handleNavigate} user={currentUser} />;
   }
 
   if (view === 'dashboard') {
