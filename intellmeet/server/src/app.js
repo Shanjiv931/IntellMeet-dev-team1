@@ -21,9 +21,31 @@ app.set('trust proxy', 1);
 app.use(helmet());
 
 // Apply CORS configurations mapped strictly to the frontend SaaS client domain
+// Apply CORS configurations mapped strictly to the frontend SaaS client domain (with local and Vercel sub-domain fallbacks)
+const allowedOrigins = [
+  env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like curl, postman, or mobile apps)
+      if (!origin) return callback(null, true);
+      
+      const isAllowed = allowedOrigins.includes(origin) || 
+                        origin.endsWith('.vercel.app') || 
+                        origin.endsWith('.netlify.app') ||
+                        env.NODE_ENV !== 'production';
+      
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        logger.warn(`CORS blocked request from origin: ${origin}`);
+        callback(new Error(`Origin '${origin}' not authorized by CORS policy.`));
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true, // Allow session cookies / authorization headers
