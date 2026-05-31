@@ -2,6 +2,7 @@ import http from 'http';
 import app from './app.js';
 import env from './config/env.js';
 import { connectDB, closeDB } from './config/db.js';
+import { seedDatabaseSilent } from './config/dbInit.js';
 import { initSocket } from './sockets/socket.server.js';
 import logger from './utils/logger.js';
 
@@ -23,6 +24,9 @@ logger.info('Socket server initialized.');
 // Establish connection to MongoDB Atlas
 await connectDB();
 logger.info('MongoDB connected.');
+
+// Compile database collections and seed indexes on boot automatically
+await seedDatabaseSilent();
 
 // Listen on configured cloud port
 const PORT = env.PORT;
