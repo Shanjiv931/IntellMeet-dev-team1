@@ -20,7 +20,7 @@ export default function Dashboard({ onNavigate, user }) {
     setLoading(true);
     setError('');
     try {
-      const response = await api.get('/api/meetings');
+      const response = await api.get('/meetings');
       setMeetings(response.data.meetings || []);
     } catch (err) {
       console.error('Failed to load meetings', err);
@@ -49,7 +49,7 @@ export default function Dashboard({ onNavigate, user }) {
       const title = `Instant Sync - ${firstName}`;
       const description = `Instant collaboration session launched by ${safeUser.name}`;
       
-      const response = await api.post('/api/meetings', {
+      const response = await api.post('/meetings', {
         title,
         description,
         startTime: new Date().toISOString()
@@ -68,7 +68,7 @@ export default function Dashboard({ onNavigate, user }) {
     if (!title) return;
 
     try {
-      const response = await api.post('/api/meetings', {
+      const response = await api.post('/meetings', {
         title,
         description: "Scheduled sprint meeting session.",
         startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Scheduled for tomorrow
