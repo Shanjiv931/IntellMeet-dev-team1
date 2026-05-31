@@ -12,13 +12,13 @@ This repository operates on a fully decoupled **Monorepo Architecture** with ind
 
 ```mermaid
 graph TD
-    subgraph Client Application (Vercel / Netlify)
+    subgraph "Client Application (Vercel / Netlify)"
         React["React 19 Frontend SPA"]
         API["api.js Fetch client (JWT Interceptors)"]
         SocketClient["Socket.io-client Gateway"]
     end
     
-    subgraph Server Application (Render / Railway / AWS)
+    subgraph "Server Application (Render / Railway / AWS)"
         Express["Express MVC Middleware Pipeline"]
         MeetingCRUD["Meeting CRUD Handlers"]
         AuthRot["Auth /refresh & /avatar Routing"]
@@ -27,7 +27,7 @@ graph TD
         DBService["Resilient DB Connection Gateway"]
     end
 
-    subgraph Managed Cloud Infrastructure
+    subgraph "Managed Cloud Infrastructure"
         MongoDB[("MongoDB Atlas Sharded Cluster")]
         Redis[("Upstash / Redis Labs Cloud Cache")]
         Cloudinary[("Cloudinary Media CDN")]
