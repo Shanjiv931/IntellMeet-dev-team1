@@ -8,6 +8,8 @@ import RoomControls from '../components/room/RoomControls';
 import './Room.css';
 
 export default function Room({ onNavigate, user }) {
+  const safeUser = user || { name: "Guest User", role: "Guest", avatar: "GU" };
+
   // Toolbar and Meeting States
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
@@ -28,6 +30,9 @@ export default function Room({ onNavigate, user }) {
   ]);
   const [inputMsg, setInputMsg] = useState('');
   const chatEndRef = useRef(null);
+  
+  // Timer reference to ensure safe, leak-proof interval cleanup
+  const timerRef = useRef(null);
 
   // Responsive Layout detection: switches sidebar format between Desktop Split and Mobile tabbed-overlay
   useEffect(() => {
@@ -47,10 +52,16 @@ export default function Room({ onNavigate, user }) {
 
   // Tick timer every second
   useEffect(() => {
-    const timer = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setSeconds(prev => prev + 1);
     }, 1000);
-    return () => clearInterval(timer);
+    
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, []);
 
   // Auto-scroll chat on message update
@@ -63,7 +74,7 @@ export default function Room({ onNavigate, user }) {
     if (!inputMsg.trim()) return;
     setMessages([
       ...messages,
-      { sender: user.name, initials: user.avatar, text: inputMsg }
+      { sender: safeUser.name, initials: safeUser.avatar, text: inputMsg }
     ]);
     setInputMsg('');
   };
@@ -78,6 +89,15 @@ export default function Room({ onNavigate, user }) {
     }
   };
 
+  // Safe handler to leave meeting: clears interval immediately and navigates
+  const handleLeaveMeeting = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    onNavigate('dashboard');
+  };
+
   return (
     <div className="room-page">
       {/* Top Header Panel */}
@@ -87,7 +107,7 @@ export default function Room({ onNavigate, user }) {
       <div className="room-main-container">
         {/* Video Area Grid */}
         <VideoGrid 
-          user={user} 
+          user={safeUser} 
           isMuted={isMuted} 
           isCameraOff={isCameraOff} 
           isSharingScreen={isSharingScreen} 
@@ -131,12 +151,12 @@ export default function Room({ onNavigate, user }) {
                       setInputMsg={setInputMsg}
                       handleSendChat={handleSendChat}
                       chatEndRef={chatEndRef}
-                      currentUserInitials={user.avatar}
+                      currentUserInitials={safeUser.avatar}
                     />
                   )}
                   {activeSidebarTab === 'participants' && (
                     <ParticipantsPanel 
-                      user={user}
+                      user={safeUser}
                       isMuted={isMuted}
                       isCameraOff={isCameraOff}
                       isSharingScreen={isSharingScreen}
@@ -173,7 +193,7 @@ export default function Room({ onNavigate, user }) {
                       <AiNotesPanel />
                     ) : (
                       <ParticipantsPanel 
-                        user={user}
+                        user={safeUser}
                         isMuted={isMuted}
                         isCameraOff={isCameraOff}
                         isSharingScreen={isSharingScreen}
@@ -189,7 +209,7 @@ export default function Room({ onNavigate, user }) {
                     setInputMsg={setInputMsg}
                     handleSendChat={handleSendChat}
                     chatEndRef={chatEndRef}
-                    currentUserInitials={user.avatar}
+                    currentUserInitials={safeUser.avatar}
                   />
                 </div>
               </div>
@@ -209,7 +229,7 @@ export default function Room({ onNavigate, user }) {
         showSidebar={showSidebar}
         activeSidebarTab={activeSidebarTab}
         onToggleSidebarPanel={handleToggleSidebarPanel}
-        onLeaveMeeting={() => onNavigate('dashboard')}
+        onLeaveMeeting={handleLeaveMeeting}
       />
     </div>
   );

@@ -6,6 +6,8 @@ export default function Lobby({ onNavigate, user }) {
   const [isCamOn, setIsCamOn] = useState(true);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
 
+  const safeUser = user || { name: "Guest User", role: "Guest", avatar: "GU" };
+
   const meetingDetails = {
     title: "Q3 Strategy Planning",
     desc: "Align on quarterly strategy timelines, review marketing outlines, and establish developer OKR matrices.",
@@ -31,7 +33,7 @@ export default function Lobby({ onNavigate, user }) {
           <div className="preview-box">
             {isCamOn ? (
               <div className="camera-active">
-                <div className="avatar-preview">{user.avatar}</div>
+                <div className="avatar-preview">{safeUser.avatar}</div>
                 <span className="preview-label">Your camera is ON</span>
               </div>
             ) : (

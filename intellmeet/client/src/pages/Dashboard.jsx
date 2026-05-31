@@ -3,10 +3,12 @@ import Sidebar from '../components/Sidebar';
 import DashboardNavbar from '../components/DashboardNavbar';
 import './Dashboard.css';
 
-export default function Dashboard({ onNavigate, user = { name: "Product Manager", role: "Team Member", avatar: "PM" } }) {
+export default function Dashboard({ onNavigate, user }) {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [selectedSummary, setSelectedSummary] = useState(0);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const safeUser = user || { name: "Guest User", role: "Guest", avatar: "GU" };
 
   const upcomingMeetings = [
     { id: 1, title: "Q3 Strategy Planning", time: "Today, 2:00 PM - 3:00 PM", host: "Product Manager", members: ["PM", "TL", "FE"] },
@@ -18,7 +20,7 @@ export default function Dashboard({ onNavigate, user = { name: "Product Manager"
     { id: 2, title: "Customer Demo Run", date: "May 29, 2026", duration: "30 mins", summary: "Reviewed front-end login flows; team finalized custom checkboxes and remember me storage options." }
   ];
 
-  const firstName = user.name.split(' ')[0];
+  const firstName = (safeUser.name && typeof safeUser.name === 'string') ? safeUser.name.split(' ')[0] : 'Guest';
 
   return (
     <div className="dashboard-layout">
@@ -29,7 +31,7 @@ export default function Dashboard({ onNavigate, user = { name: "Product Manager"
       />
       
       <div className="dashboard-main">
-        <DashboardNavbar user={user} onLogout={() => setShowLogoutModal(true)} />
+        <DashboardNavbar user={safeUser} onLogout={() => setShowLogoutModal(true)} />
         
         <div className="dashboard-content container">
           {/* Header Row */}
