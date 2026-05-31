@@ -69,7 +69,7 @@ export default function Room({ onNavigate, user, meeting }) {
 
   // Socket Connection and Event Listeners
   useEffect(() => {
-    const socketUrl = import.meta.env.VITE_SOCKET_URL || 'https://intellmeet-api.onrender.com';
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || 'https://intellmeet-backend-5j5a.onrender.com';
     console.log(`Connecting to WebSocket Server: ${socketUrl} for room ${roomId}`);
     
     socketRef.current = io(socketUrl, {

@@ -187,8 +187,8 @@ sequenceDiagram
 2. Connect your repository and configure the root directory to `intellmeet/client`.
 3. Set the build command to `npm run build` and output directory to `dist`.
 4. Inject **Frontend Environment Variables**:
-   * `VITE_API_URL` -> Set to your Render backend HTTPS link + `/api` (e.g. `https://intellmeet-api.onrender.com/api`).
-   * `VITE_SOCKET_URL` -> Set to your Render backend HTTPS link (e.g. `https://intellmeet-api.onrender.com`).
+   * `VITE_API_URL` -> Set to your Render backend HTTPS link + `/api` (e.g. `https://intellmeet-backend-5j5a.onrender.com/api`).
+   * `VITE_SOCKET_URL` -> Set to your Render backend HTTPS link (e.g. `https://intellmeet-backend-5j5a.onrender.com`).
 5. Deploy. Vercel will generate an HTTPS link (e.g. `https://intellmeet-client.vercel.app`).
 6. **CRITICAL FINAL STEP**: Copy this Vercel link, navigate back to your Render/Railway dashboard, and update your backend's `CLIENT_URL` to match this front-end domain perfectly to finalize CORS validation!
 
