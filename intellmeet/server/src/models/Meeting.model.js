@@ -41,6 +41,21 @@ const MeetingSchema = new mongoose.Schema(
     endTime: {
       type: Date,
     },
+    summary: {
+      type: String,
+      default: '',
+    },
+    transcript: {
+      type: String,
+      default: '',
+    },
+    actionItems: [
+      {
+        text: { type: String, required: true },
+        completed: { type: Boolean, default: false },
+        assignee: { type: String, default: '' },
+      }
+    ],
   },
   {
     timestamps: true,

@@ -80,11 +80,11 @@ export const updateMeeting = async (req, res, next) => {
   try {
     const meetingId = req.params.id;
     const userId = req.user._id || req.user.id;
-    const { title, description, status, startTime, endTime } = req.body;
+    const { title, description, status, startTime, endTime, summary, transcript, actionItems } = req.body;
 
     const updated = await meetingService.updateMeeting(
       meetingId,
-      { title, description, status, startTime, endTime },
+      { title, description, status, startTime, endTime, summary, transcript, actionItems },
       userId
     );
 

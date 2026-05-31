@@ -1,7 +1,7 @@
 import React from 'react';
 import './DashboardNavbar.css';
 
-export default function DashboardNavbar({ user, onLogout }) {
+export default function DashboardNavbar({ user, onLogout, searchQuery, setSearchQuery }) {
   const safeUser = user || { name: "Guest User", role: "Guest", avatar: "GU" };
   return (
     <header className="db-navbar">
@@ -11,7 +11,12 @@ export default function DashboardNavbar({ user, onLogout }) {
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input type="text" placeholder="Search meetings, transcripts, summaries..." />
+        <input 
+          type="text" 
+          placeholder="Search meetings, transcripts, summaries..." 
+          value={searchQuery || ''}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       {/* Top Navbar Actions */}
