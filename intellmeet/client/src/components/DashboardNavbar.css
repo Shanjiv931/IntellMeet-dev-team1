@@ -73,7 +73,27 @@
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  border-left: 1px solid var(--border-color);
+  padding-left: 20px;
+}
+
+.btn-profile-logout {
+  font-size: 12px;
+  color: #ef4444;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-profile-logout:hover {
+  background-color: #fee2e2;
+  transform: translateY(-0.5px);
 }
 
 .user-avatar {

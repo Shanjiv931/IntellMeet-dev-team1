@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 
-export default function Sidebar({ onNavigate, onLogout, currentTab, setCurrentTab }) {
+export default function Sidebar({ onNavigate, currentTab, setCurrentTab }) {
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
     { id: 'meetings', name: 'Meetings', icon: '🎥' },
     { id: 'summaries', name: 'AI Summaries', icon: '🤖' },
-    { id: 'integrations', name: 'Integrations', icon: '🔌' },
+    { id: 'tasks', name: 'Tasks', icon: '📋' },
     { id: 'settings', name: 'Settings', icon: '⚙️' }
   ];
 
@@ -34,13 +34,6 @@ export default function Sidebar({ onNavigate, onLogout, currentTab, setCurrentTa
           </button>
         ))}
       </nav>
-
-      <div className="sidebar-footer">
-        <button className="btn-logout" onClick={onLogout}>
-          <span className="sidebar-icon">🚪</span>
-          <span className="sidebar-name">Logout</span>
-        </button>
-      </div>
     </aside>
   );
 }
