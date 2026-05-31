@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import './AiNotesPanel.css';
 
-export default function AiNotesPanel() {
+export default function AiNotesPanel({ meeting, user }) {
+  const meetingTitle = meeting?.title || "Collaboration Session";
+  const safeUser = user || { name: "Admin" };
+  const initials = safeUser.name ? safeUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : "IA";
+
   // Local state to make action items checkable/interactive
   const [tasks, setTasks] = useState([
-    { id: 1, text: "Alex: Finalize sprint database schema configuration.", completed: false },
-    { id: 2, text: "Sarah: Draft test cases for meeting logs.", completed: false }
+    { id: 1, text: `${initials}: Complete validation check routines for "${meetingTitle}".`, completed: false },
+    { id: 2, text: "Sarah: Draft comprehensive verification test cases.", completed: false }
   ]);
 
   const toggleTask = (id) => {
@@ -29,7 +33,7 @@ export default function AiNotesPanel() {
             <span className="note-icon">🎙️</span>
             <h5>Real-time Transcript Highlight</h5>
           </div>
-          <p className="note-quote">"Ensure Front-end modules use separate CSS stylesheets..."</p>
+          <p className="note-quote">"Ensure database schema models for '${meetingTitle}' support robust, real-time sync fields..."</p>
         </div>
 
         {/* Discussion Points Section */}
@@ -38,7 +42,7 @@ export default function AiNotesPanel() {
             <span className="note-icon">🗣️</span>
             <h5>Key Discussion Point</h5>
           </div>
-          <p className="note-desc">Discussed authentication workflow routes and validation check routines.</p>
+          <p className="note-desc">Discussed operational milestones and API parameters related to "${meetingTitle}".</p>
         </div>
 
         {/* Action Items Section */}

@@ -28,8 +28,7 @@ export default function Room({ onNavigate, user, meeting }) {
   
   // Chat Messages State
   const [messages, setMessages] = useState([
-    { sender: "Tech Lead", initials: "TL", text: "Let's review Q3 product release endpoints." },
-    { sender: "QA Lead", initials: "QA", text: "Testing schedules look good. We are ready." }
+    { sender: "IntellMeet Bot", initials: "🤖", text: `Welcome to your secure collaboration room for "${meetingTitle}". Real-time chat, screen sharing, and AI-powered transcripts are active.` }
   ]);
   const [inputMsg, setInputMsg] = useState('');
   
@@ -382,7 +381,7 @@ export default function Room({ onNavigate, user, meeting }) {
                     />
                   )}
                   {activeSidebarTab === 'ainotes' && (
-                    <AiNotesPanel />
+                    <AiNotesPanel meeting={meeting} user={safeUser} />
                   )}
                 </div>
               </div>
@@ -409,7 +408,7 @@ export default function Room({ onNavigate, user, meeting }) {
                   </div>
                   <div className="sidebar-tab-content">
                     {activeSidebarTab === 'ainotes' ? (
-                      <AiNotesPanel />
+                      <AiNotesPanel meeting={meeting} user={safeUser} />
                     ) : (
                       <ParticipantsPanel 
                         user={safeUser}
