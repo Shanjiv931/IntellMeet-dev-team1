@@ -71,6 +71,22 @@ IntellMeet implements state-of-the-art **Fault Tolerance and Resilient Fallbacks
 
 ---
 
+## 🌱 Automatic Database Seeding & Self-Healing on Boot
+
+IntellMeet is equipped with an automated, **100% Free Self-Healing Database Boot Seeder** (`dbInit.js`). You **do not need a paid Render Web Shell** to set up your tables:
+* **Automatic Collection Compilation**: Every time your Render web service boots up (or wakes from inactivity), it automatically compiles Mongoose models and triggers `createIndexes()`. This **instantly registers the `users` and `meetings` collections** in MongoDB Atlas with all key unique constraints.
+* **Auto-Seed Admin Profile**: The server automatically queries if a default administrative email exists. If it does not, it registers a secure, pre-hashed administrator account.
+
+Once deployed online, you can immediately log in on your live Vercel frontend using these default admin credentials:
+* 🌐 **Email**: `admin@intellmeet.app`
+* 🔑 **Password**: `Password123!`
+* 🛡️ **Role**: `ADMIN`
+
+> [!NOTE]
+> If you are working in a local whitelisted development environment, you can also trigger seeding manually using the terminal command: `npm run seed`.
+
+---
+
 ## 🚀 100% Online Production Cloud Deployment Guide
 
 Follow this guide to host IntellMeet completely online without using `localhost` references.
@@ -128,8 +144,8 @@ Configure these keys in **Vercel** or **Netlify** Environment Variables tab:
 
 | Variable Name | Required | Description | Production Example |
 | :--- | :--- | :--- | :--- |
-| `VITE_API_URL` | Yes | Public Backend HTTPS REST Route origin | `https://intellmeet-api.onrender.com/api` |
-| `VITE_SOCKET_URL`| Yes | Public Backend WebSocket origin for signaling | `https://intellmeet-api.onrender.com` |
+| `VITE_API_URL` | Yes | Public Backend HTTPS REST Route origin | `https://intellmeet-backend.onrender.com/api` |
+| `VITE_SOCKET_URL`| Yes | Public Backend WebSocket origin for signaling | `https://intellmeet-backend.onrender.com` |
 
 ---
 
@@ -160,7 +176,7 @@ sequenceDiagram
 2. Connect your GitHub repository. Set the root directory to `intellmeet/server`.
 3. Set the start command to `npm start`.
 4. Inject all required **Backend Environment Variables** (outlined above), pointing `CLIENT_URL` to your future Frontend URL.
-5. Deploy. Render/Railway will provision an HTTPS link (e.g. `https://intellmeet-api.onrender.com`).
+5. Deploy. Render/Railway will provision an HTTPS link (e.g. `https://intellmeet-backend.onrender.com`).
 
 ### Step 2: Deploy Frontend (`/client`)
 1. Create a new project on [Vercel](https://vercel.com).
