@@ -1,17 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
+import RoomHeader from '../components/room/RoomHeader';
+import VideoGrid from '../components/room/VideoGrid';
+import ChatPanel from '../components/room/ChatPanel';
+import ParticipantsPanel from '../components/room/ParticipantsPanel';
+import AiNotesPanel from '../components/room/AiNotesPanel';
+import RoomControls from '../components/room/RoomControls';
 import './Room.css';
 
 export default function Room({ onNavigate, user }) {
+  // Toolbar and Meeting States
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [isSharingScreen, setIsSharingScreen] = useState(false);
-  const [activePanel, setActivePanel] = useState('chat'); // 'chat' or 'ainotes'
   const [showSidebar, setShowSidebar] = useState(true);
+  const [activeSidebarTab, setActiveSidebarTab] = useState('participants'); // 'chat', 'participants', or 'ainotes'
   
   // Timer State
   const [seconds, setSeconds] = useState(942); // Start at 15 mins 42 secs
   
-  // Chat State
+  // Responsive check state
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Chat Messages State
   const [messages, setMessages] = useState([
     { sender: "Tech Lead", initials: "TL", text: "Let's review Q3 product release endpoints." },
     { sender: "QA Lead", initials: "QA", text: "Testing schedules look good. We are ready." }
@@ -19,7 +29,23 @@ export default function Room({ onNavigate, user }) {
   const [inputMsg, setInputMsg] = useState('');
   const chatEndRef = useRef(null);
 
-  // Increment timer every second
+  // Responsive Layout detection: switches sidebar format between Desktop Split and Mobile tabbed-overlay
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // On desktop, the ChatPanel is always visible at the bottom.
+      // If we resize from mobile to desktop while 'chat' is active, reset top section active tab to 'participants'.
+      if (!mobile && activeSidebarTab === 'chat') {
+        setActiveSidebarTab('participants');
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [activeSidebarTab]);
+
+  // Tick timer every second
   useEffect(() => {
     const timer = setInterval(() => {
       setSeconds(prev => prev + 1);
@@ -27,21 +53,10 @@ export default function Room({ onNavigate, user }) {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-scroll chat to bottom
+  // Auto-scroll chat on message update
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const formatTimer = (totalSecs) => {
-    const hrs = Math.floor(totalSecs / 3600);
-    const mins = Math.floor((totalSecs % 3600) / 60);
-    const secs = totalSecs % 60;
-    return [
-      hrs.toString().padStart(2, '0'),
-      mins.toString().padStart(2, '0'),
-      secs.toString().padStart(2, '0')
-    ].join(':');
-  };
+  }, [messages, showSidebar]);
 
   const handleSendChat = (e) => {
     e.preventDefault();
@@ -53,184 +68,149 @@ export default function Room({ onNavigate, user }) {
     setInputMsg('');
   };
 
+  // Centralized helper to manage control bar sidebar triggers
+  const handleToggleSidebarPanel = (panelName) => {
+    if (showSidebar && activeSidebarTab === panelName) {
+      setShowSidebar(false);
+    } else {
+      setShowSidebar(true);
+      setActiveSidebarTab(panelName);
+    }
+  };
+
   return (
     <div className="room-page">
       {/* Top Header Panel */}
-      <header className="room-header">
-        <div className="room-info">
-          <h2>Q3 Strategy Planning</h2>
-          <span className="room-badge">● Live Recording</span>
-        </div>
-        <div className="room-timer-box">
-          <span className="timer-icon">⏳</span>
-          <span className="timer-text">{formatTimer(seconds)}</span>
-        </div>
-      </header>
+      <RoomHeader title="Q3 Strategy Planning" seconds={seconds} />
 
       {/* Main Container */}
       <div className="room-main-container">
         {/* Video Area Grid */}
-        <div className="room-video-area">
-          <div className="video-area-grid">
-            
-            {/* Participant 1: Tech Lead */}
-            <div className="participant-video-card active-speaker">
-              <div className="video-avatar-box bg-blue">TL</div>
-              <span className="participant-label">Tech Lead (Alex)</span>
-              <div className="speaking-mic-badge">🎤 Speaker</div>
-            </div>
-
-            {/* Participant 2: QA Lead */}
-            <div className="participant-video-card">
-              <div className="video-avatar-box bg-teal">QA</div>
-              <span className="participant-label">QA Lead (Sarah)</span>
-            </div>
-
-            {/* Participant 3: Shared Screen or Mock Placeholder */}
-            {isSharingScreen ? (
-              <div className="participant-video-card screen-share-card">
-                <div className="screen-share-visual">🖥️ Sharing Screen</div>
-                <span className="participant-label">You (Screen Share)</span>
-              </div>
-            ) : (
-              <div className="participant-video-card empty-stream-placeholder">
-                <div className="video-avatar-box bg-purple">IM</div>
-                <span className="participant-label">IntellMeet Room Feed</span>
-              </div>
-            )}
-
-            {/* Participant 4: You */}
-            <div className="participant-video-card">
-              {isCameraOff ? (
-                <div className="video-off-avatar bg-primary">{user.avatar}</div>
-              ) : (
-                <div className="video-feed-mock user-feed">
-                  <div className="user-feed-initials">{user.avatar}</div>
-                  <span className="live-pill">Live Feed</span>
-                </div>
-              )}
-              <span className="participant-label">You ({user.name}) {isMuted && '(Muted)'}</span>
-            </div>
-
-          </div>
-        </div>
+        <VideoGrid 
+          user={user} 
+          isMuted={isMuted} 
+          isCameraOff={isCameraOff} 
+          isSharingScreen={isSharingScreen} 
+        />
 
         {/* Right Sidebar Panel */}
         {showSidebar && (
           <aside className="room-sidebar">
-            <div className="sidebar-tab-header">
-              <button 
-                className={`tab-toggle-btn ${activePanel === 'chat' ? 'active' : ''}`}
-                onClick={() => setActivePanel('chat')}
-              >
-                💬 Chat ({messages.length})
-              </button>
-              <button 
-                className={`tab-toggle-btn ${activePanel === 'ainotes' ? 'active' : ''}`}
-                onClick={() => setActivePanel('ainotes')}
-              >
-                🤖 AI Notes
-              </button>
-              <button className="sidebar-close-btn" onClick={() => setShowSidebar(false)} aria-label="Close sidebar">
-                ✕
-              </button>
-            </div>
-
-            <div className="sidebar-tab-content">
-              {/* Chat View */}
-              {activePanel === 'chat' && (
-                <div className="chat-panel-container">
-                  <div className="chat-messages-box">
-                    {messages.map((msg, idx) => (
-                      <div className="chat-message-bubble" key={idx}>
-                        <div className="msg-avatar">{msg.initials}</div>
-                        <div className="msg-content">
-                          <span className="msg-sender">{msg.sender}</span>
-                          <p className="msg-text">{msg.text}</p>
-                        </div>
-                      </div>
-                    ))}
-                    <div ref={chatEndRef} />
-                  </div>
-                  <form onSubmit={handleSendChat} className="chat-input-bar">
-                    <input 
-                      type="text" 
-                      placeholder="Type a message..." 
-                      value={inputMsg}
-                      onChange={(e) => setInputMsg(e.target.value)}
+            {isMobile ? (
+              /* Mobile Layout: Single view at a time using 3 tabs */
+              <div className="sidebar-mobile-layout">
+                <div className="sidebar-tab-header">
+                  <button 
+                    className={`tab-toggle-btn ${activeSidebarTab === 'chat' ? 'active' : ''}`}
+                    onClick={() => setActiveSidebarTab('chat')}
+                  >
+                    💬 Chat ({messages.length})
+                  </button>
+                  <button 
+                    className={`tab-toggle-btn ${activeSidebarTab === 'participants' ? 'active' : ''}`}
+                    onClick={() => setActiveSidebarTab('participants')}
+                  >
+                    👥 Participants
+                  </button>
+                  <button 
+                    className={`tab-toggle-btn ${activeSidebarTab === 'ainotes' ? 'active' : ''}`}
+                    onClick={() => setActiveSidebarTab('ainotes')}
+                  >
+                    🤖 AI Notes
+                  </button>
+                  <button className="sidebar-close-btn" onClick={() => setShowSidebar(false)} aria-label="Close sidebar">
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="sidebar-tab-content">
+                  {activeSidebarTab === 'chat' && (
+                    <ChatPanel 
+                      messages={messages}
+                      inputMsg={inputMsg}
+                      setInputMsg={setInputMsg}
+                      handleSendChat={handleSendChat}
+                      chatEndRef={chatEndRef}
+                      currentUserInitials={user.avatar}
                     />
-                    <button type="submit" className="btn-send-message">Send</button>
-                  </form>
+                  )}
+                  {activeSidebarTab === 'participants' && (
+                    <ParticipantsPanel 
+                      user={user}
+                      isMuted={isMuted}
+                      isCameraOff={isCameraOff}
+                      isSharingScreen={isSharingScreen}
+                    />
+                  )}
+                  {activeSidebarTab === 'ainotes' && (
+                    <AiNotesPanel />
+                  )}
                 </div>
-              )}
-
-              {/* AI Notes View */}
-              {activePanel === 'ainotes' && (
-                <div className="ainotes-panel-container">
-                  <div className="ainotes-scroller">
-                    <div className="ainotes-item border-left-blue">
-                      <h5>🎙️ Real-time Transcript Highlight</h5>
-                      <p>"Ensure Front-end modules use separate CSS stylesheets..."</p>
-                    </div>
-                    <div className="ainotes-item">
-                      <h5>🤖 Key Discussion Point</h5>
-                      <p>Discussed authentication workflow routes and validation check routines.</p>
-                    </div>
-                    <div className="ainotes-item">
-                      <h5>✅ Action Items</h5>
-                      <ul>
-                        <li>Alex: Finalize sprint database schema configuration.</li>
-                        <li>Sarah: Draft test cases for meeting logs.</li>
-                      </ul>
-                    </div>
+              </div>
+            ) : (
+              /* Desktop Layout: Split view. Top (Participants OR AI Notes), Bottom (Chat always accessible) */
+              <div className="sidebar-desktop-layout">
+                <div className="sidebar-top-section">
+                  <div className="sidebar-tab-header">
+                    <button 
+                      className={`tab-toggle-btn ${activeSidebarTab === 'participants' ? 'active' : ''}`}
+                      onClick={() => setActiveSidebarTab('participants')}
+                    >
+                      👥 Participants
+                    </button>
+                    <button 
+                      className={`tab-toggle-btn ${activeSidebarTab === 'ainotes' ? 'active' : ''}`}
+                      onClick={() => setActiveSidebarTab('ainotes')}
+                    >
+                      🤖 AI Notes
+                    </button>
+                    <button className="sidebar-close-btn" onClick={() => setShowSidebar(false)} aria-label="Close sidebar">
+                      ✕
+                    </button>
+                  </div>
+                  <div className="sidebar-tab-content">
+                    {activeSidebarTab === 'ainotes' ? (
+                      <AiNotesPanel />
+                    ) : (
+                      <ParticipantsPanel 
+                        user={user}
+                        isMuted={isMuted}
+                        isCameraOff={isCameraOff}
+                        isSharingScreen={isSharingScreen}
+                      />
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
+
+                <div className="sidebar-bottom-section">
+                  <ChatPanel 
+                    messages={messages}
+                    inputMsg={inputMsg}
+                    setInputMsg={setInputMsg}
+                    handleSendChat={handleSendChat}
+                    chatEndRef={chatEndRef}
+                    currentUserInitials={user.avatar}
+                  />
+                </div>
+              </div>
+            )}
           </aside>
         )}
       </div>
 
       {/* Bottom Control Toolbar */}
-      <footer className="room-controls-bar">
-        <div className="controls-center-group">
-          <button 
-            className={`control-round-btn ${isMuted ? 'danger-muted' : 'active-white'}`}
-            onClick={() => setIsMuted(!isMuted)}
-            title={isMuted ? "Unmute Mic" : "Mute Mic"}
-          >
-            {isMuted ? '🎙️' : '🎤'}
-          </button>
-          <button 
-            className={`control-round-btn ${isCameraOff ? 'danger-muted' : 'active-white'}`}
-            onClick={() => setIsCameraOff(!isCameraOff)}
-            title={isCameraOff ? "Turn Camera On" : "Turn Camera Off"}
-          >
-            {isCameraOff ? '📹' : '📷'}
-          </button>
-          <button 
-            className={`control-round-btn ${isSharingScreen ? 'accent-green' : 'active-white'}`}
-            onClick={() => setIsSharingScreen(!isSharingScreen)}
-            title={isSharingScreen ? "Stop Screen Share" : "Share Screen"}
-          >
-            🖥️
-          </button>
-          <button 
-            className={`control-round-btn ${showSidebar ? 'accent-blue' : 'active-white'}`}
-            onClick={() => setShowSidebar(!showSidebar)}
-            title="Toggle Sidebar Panel"
-          >
-            👥
-          </button>
-          <button 
-            className="control-round-btn btn-leave"
-            onClick={() => onNavigate('dashboard')}
-            title="Leave Meeting"
-          >
-            📞
-          </button>
-        </div>
-      </footer>
+      <RoomControls
+        isMuted={isMuted}
+        onToggleMute={() => setIsMuted(!isMuted)}
+        isCameraOff={isCameraOff}
+        onToggleCamera={() => setIsCameraOff(!isCameraOff)}
+        isSharingScreen={isSharingScreen}
+        onToggleScreenShare={() => setIsSharingScreen(!isSharingScreen)}
+        showSidebar={showSidebar}
+        activeSidebarTab={activeSidebarTab}
+        onToggleSidebarPanel={handleToggleSidebarPanel}
+        onLeaveMeeting={() => onNavigate('dashboard')}
+      />
     </div>
   );
 }
