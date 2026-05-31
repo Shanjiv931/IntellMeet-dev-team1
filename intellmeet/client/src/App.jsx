@@ -3,9 +3,10 @@ import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import Lobby from './pages/Lobby';
 
 function App() {
-  const [view, setView] = useState('landing'); // 'landing', 'login', 'signup', or 'dashboard'
+  const [view, setView] = useState('landing'); // 'landing', 'login', 'signup', 'dashboard', or 'lobby'
   const [currentUser, setCurrentUser] = useState({ name: "Product Manager", role: "Team Member", avatar: "PM" });
 
   const handleNavigate = (targetView) => {
@@ -40,6 +41,10 @@ function App() {
 
   if (view === 'signup') {
     return <Signup onNavigate={handleNavigate} onSignupSuccess={handleSignupSuccess} />;
+  }
+
+  if (view === 'lobby') {
+    return <Lobby onNavigate={handleNavigate} user={currentUser} />;
   }
 
   if (view === 'dashboard') {

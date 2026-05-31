@@ -74,7 +74,7 @@ export default function Dashboard({ onNavigate, user = { name: "Product Manager"
                         <h4>{meeting.title}</h4>
                         <span>{meeting.time}</span>
                       </div>
-                      <button className="btn-join">Join</button>
+                      <button className="btn-join" onClick={() => onNavigate('lobby')}>Join</button>
                     </div>
                   ))}
                 </div>
