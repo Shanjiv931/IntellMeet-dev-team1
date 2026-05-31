@@ -26,7 +26,7 @@ export default function Navbar({ onNavigate }) {
 
         <div className="nav-actions">
           <button className="btn-signin" onClick={() => onNavigate('login')}>Sign In</button>
-          <button className="btn-signup" onClick={() => onNavigate('login')}>Get Started Free</button>
+          <button className="btn-signup" onClick={() => onNavigate('signup')}>Get Started Free</button>
         </div>
 
         <button className="nav-toggle" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">

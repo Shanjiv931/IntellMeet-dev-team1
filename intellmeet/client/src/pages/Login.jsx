@@ -74,7 +74,7 @@ export default function Login({ onNavigate }) {
           </form>
 
           <p className="signup-prompt">
-            Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('landing'); }}>Sign up for free</a>
+            Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('signup'); }}>Sign up for free</a>
           </p>
         </div>
       </div>
