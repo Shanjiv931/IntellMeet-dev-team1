@@ -1,0 +1,190 @@
+.room-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #080b11; /* Sleek, dark primary canvas */
+  color: #f3f4f6;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Main inner container layout */
+.room-main-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Sidebar styling */
+.room-sidebar {
+  width: 380px;
+  flex-shrink: 0;
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 20;
+}
+
+/* Desktop Split Layout structure */
+.sidebar-desktop-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-top-section {
+  flex: 1;
+  min-height: 0; /* Ensures proper scrolling nested within flex */
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-bottom-section {
+  height: 50%;
+  min-height: 280px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile full-tab layout structure */
+.sidebar-mobile-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-tab-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.2);
+}
+
+.tab-toggle-btn {
+  flex: 1;
+  padding: 16px 12px;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.tab-toggle-btn:hover {
+  color: #f3f4f6;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.tab-toggle-btn.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-tab-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-close-btn {
+  display: none; /* Hidden on desktop */
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: #9ca3af;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+.sidebar-close-btn:hover {
+  color: #ffffff;
+}
+
+/* Keyframes for sliding drawer on mobile/tablet */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Responsive Overrides */
+@media (max-width: 768px) {
+  .room-sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    height: 100%;
+    width: 100%;
+    max-width: 380px;
+    z-index: 50;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .sidebar-close-btn {
+    display: block; /* Visible on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .room-sidebar {
+    max-width: 100%; /* Cover screen completely on very small devices */
+  }
+}
+
+/* Live Caption Display Overlay */
+.live-caption-overlay {
+  position: absolute;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 12px 28px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 80%;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  z-index: 25;
+  pointer-events: none;
+  animation: fadeInCaption 0.2s ease-out;
+}
+
+.caption-sender {
+  font-weight: 700;
+  color: #38bdf8;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.caption-text {
+  color: #f3f4f6;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+@keyframes fadeInCaption {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
