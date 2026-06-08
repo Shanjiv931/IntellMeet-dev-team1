@@ -1,0 +1,11 @@
+{
+  "name": "IntelliMeet Pro",
+  "description": "A world-class AI-powered video conferencing and collaboration platform with real-time whiteboards, polls, breakout rooms, and automated AI meeting summaries.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
