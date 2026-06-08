@@ -1,5 +1,5 @@
 import { verifyAccessToken } from '../utils/jwt.utils.js';
-import User from '../models/User.model.js';
+import { getUserById } from '../services/auth.service.js';
 import AppError from '../utils/AppError.js';
 
 /**
@@ -18,11 +18,9 @@ export const authenticateJWT = async (req, res, next) => {
     // Verify Access Token (throws error if signature or expiry is invalid)
     const decoded = verifyAccessToken(token);
 
-    // Fetch the user from MongoDB Atlas
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      throw new AppError('Authentication failed. User session no longer exists in system.', 401);
-    }
+    // Fetch the user (utilizes MongoDB Atlas or offline memory fallback)
+    const user = await getUserById(decoded.id);
+
 
     // Attach user information to request context
     req.user = user;

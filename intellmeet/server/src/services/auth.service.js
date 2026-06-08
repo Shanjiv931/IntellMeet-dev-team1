@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import User from '../models/User.model.js';
+import Session from '../models/Session.model.js';
 import AppError from '../utils/AppError.js';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.utils.js';
 import logger from '../utils/logger.js';
@@ -13,7 +14,7 @@ const isDBConnected = () => mongoose.connection.readyState === 1;
 /**
  * Register a new user in MongoDB Atlas (with in-memory fallback)
  */
-export const registerUser = async ({ name, email, password, role }) => {
+export const registerUser = async ({ name, email, password, role, userAgent, ipAddress }) => {
   const normalizedEmail = email.toLowerCase().trim();
 
   if (isDBConnected()) {
@@ -34,12 +35,20 @@ export const registerUser = async ({ name, email, password, role }) => {
       name: newUser.name,
       email: newUser.email,
       role: newUser.role,
+      avatar: newUser.avatar || '',
       createdAt: newUser.createdAt,
     };
 
     const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
+
+    await Session.create({
+      user: newUser._id,
+      token: accessToken,
+      device: userAgent || 'Unknown Device',
+      ipAddress: ipAddress || 'Unknown IP'
+    });
 
     return {
       user: userResponse,
@@ -91,7 +100,7 @@ export const registerUser = async ({ name, email, password, role }) => {
 /**
  * Login a user by validating credentials (with in-memory fallback)
  */
-export const loginUser = async ({ email, password }) => {
+export const loginUser = async ({ email, password, userAgent, ipAddress }) => {
   if (!email || !password) {
     throw new AppError('Please provide both email and password to log in.', 400);
   }
@@ -114,12 +123,20 @@ export const loginUser = async ({ email, password }) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      avatar: user.avatar || '',
       createdAt: user.createdAt,
     };
 
     const payload = { id: user._id, email: user.email, role: user.role };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
+
+    await Session.create({
+      user: user._id,
+      token: accessToken,
+      device: userAgent || 'Unknown Device',
+      ipAddress: ipAddress || 'Unknown IP'
+    });
 
     return {
       user: userResponse,

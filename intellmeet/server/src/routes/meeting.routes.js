@@ -15,5 +15,6 @@ router.get('/', meetingController.getMyMeetings);
 router.get('/:id', meetingController.getMeetingDetails);
 router.put('/:id', meetingController.updateMeeting);
 router.delete('/:id', meetingController.deleteMeeting);
+router.post('/:id/summarize', meetingController.summarizeActiveMeeting);
 
 export default router;

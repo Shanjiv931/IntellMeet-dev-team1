@@ -5,52 +5,33 @@ export default function ParticipantsPanel({
   user,
   isMuted,
   isCameraOff,
-  isSharingScreen
+  isSharingScreen,
+  peersList = []
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Define full participants list
+  // Define full participants list dynamically
   const participants = [
     {
       id: 'user',
       name: `${user.name} (You)`,
-      initials: user.avatar,
+      initials: user.avatar || 'U',
       role: 'Host',
       isMuted: isMuted,
       isCameraOff: isCameraOff,
       isSharingScreen: isSharingScreen,
       avatarBg: 'gradient-primary'
     },
-    {
-      id: 'alex',
-      name: 'Tech Lead (Alex)',
-      initials: 'TL',
-      role: 'Co-Host',
-      isMuted: false,
-      isCameraOff: false,
-      isSharingScreen: false,
-      avatarBg: 'gradient-blue'
-    },
-    {
-      id: 'sarah',
-      name: 'QA Lead (Sarah)',
-      initials: 'QA',
+    ...peersList.map((peerId) => ({
+      id: peerId,
+      name: `Participant (${peerId.slice(0, 5)})`,
+      initials: 'P',
       role: 'Participant',
       isMuted: false,
       isCameraOff: false,
       isSharingScreen: false,
-      avatarBg: 'gradient-teal'
-    },
-    {
-      id: 'feed',
-      name: 'IntellMeet Room Feed',
-      initials: 'IM',
-      role: 'System Feed',
-      isMuted: true,
-      isCameraOff: false,
-      isSharingScreen: false,
-      avatarBg: 'gradient-purple'
-    }
+      avatarBg: 'gradient-blue'
+    }))
   ];
 
   const filteredParticipants = participants.filter(p =>

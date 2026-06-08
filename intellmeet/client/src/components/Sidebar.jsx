@@ -6,7 +6,8 @@ export default function Sidebar({ onNavigate, currentTab, setCurrentTab }) {
     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
     { id: 'meetings', name: 'Meetings', icon: '🎥' },
     { id: 'summaries', name: 'AI Summaries', icon: '🤖' },
-    { id: 'tasks', name: 'Tasks', icon: '📋' },
+    { id: 'workspace', name: 'Workspace', icon: '👥' },
+    { id: 'analytics', name: 'Analytics', icon: '📈' },
     { id: 'settings', name: 'Settings', icon: '⚙️' }
   ];
 

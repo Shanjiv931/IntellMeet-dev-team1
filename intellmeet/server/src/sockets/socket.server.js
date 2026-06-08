@@ -152,6 +152,29 @@ export const initSocket = (httpServer) => {
     });
 
     /**
+     * Kanban Board Real-Time Synchronization Events
+     */
+    socket.on('join-kanban', () => {
+      socket.join('kanban-room');
+      logger.info(`Client ${socket.id} joined shared kanban-room`);
+    });
+
+    socket.on('kanban-task-created', (task) => {
+      logger.debug(`Broadcasting kanban-task-created: ${task?._id || task?.id}`);
+      socket.to('kanban-room').emit('kanban-task-created', task);
+    });
+
+    socket.on('kanban-task-updated', (task) => {
+      logger.debug(`Broadcasting kanban-task-updated: ${task?._id || task?.id}`);
+      socket.to('kanban-room').emit('kanban-task-updated', task);
+    });
+
+    socket.on('kanban-task-deleted', (taskId) => {
+      logger.debug(`Broadcasting kanban-task-deleted: ${taskId}`);
+      socket.to('kanban-room').emit('kanban-task-deleted', taskId);
+    });
+
+    /**
      * disconnect Event: Standard cleanup operations when client connection terminates
      */
     socket.on('disconnect', () => {

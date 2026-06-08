@@ -1,4 +1,5 @@
 import * as meetingService from '../services/meeting.service.js';
+import aiService from '../services/ai.service.js';
 import AppError from '../utils/AppError.js';
 
 /**
@@ -7,7 +8,7 @@ import AppError from '../utils/AppError.js';
  */
 export const createMeeting = async (req, res, next) => {
   try {
-    const { title, description, startTime, endTime } = req.body;
+    const { title, description, startTime, endTime, scheduledDate, scheduledTime, duration } = req.body;
 
     if (!title) {
       throw new AppError('Meeting title must be specified.', 400);
@@ -21,7 +22,10 @@ export const createMeeting = async (req, res, next) => {
       description,
       hostId,
       startTime,
-      endTime
+      endTime,
+      scheduledDate,
+      scheduledTime,
+      duration
     });
 
     res.status(201).json({
@@ -80,11 +84,34 @@ export const updateMeeting = async (req, res, next) => {
   try {
     const meetingId = req.params.id;
     const userId = req.user._id || req.user.id;
-    const { title, description, status, startTime, endTime, summary, transcript, actionItems } = req.body;
+    const { title, description, status, startTime, endTime, summary, transcript, actionItems, keyDiscussionPoints, aiGenerated, lastSummarizedTranscript, scheduledDate, scheduledTime, duration } = req.body;
+
+    const updateFields = { title, description, status, startTime, endTime, summary, transcript, actionItems, keyDiscussionPoints, aiGenerated, lastSummarizedTranscript, scheduledDate, scheduledTime, duration };
+
+    // If meeting is being completed and transcript is provided, run Gemini AI summary
+    if (status === 'COMPLETED' && transcript && transcript.trim()) {
+      const meeting = await meetingService.getMeetingById(meetingId);
+      // Cache check: only run Gemini if transcript has actually changed since last run
+      if (!meeting.aiGenerated || meeting.lastSummarizedTranscript !== transcript) {
+        const aiResult = await aiService.generateMeetingIntelligence(transcript);
+        updateFields.summary = aiResult.summary;
+        updateFields.keyDiscussionPoints = aiResult.keyDiscussionPoints;
+        updateFields.actionItems = aiResult.actionItems;
+        updateFields.aiGenerated = true;
+        updateFields.lastSummarizedTranscript = transcript;
+      } else {
+        // Carry forward existing cached values
+        updateFields.summary = meeting.summary;
+        updateFields.keyDiscussionPoints = meeting.keyDiscussionPoints;
+        updateFields.actionItems = meeting.actionItems;
+        updateFields.aiGenerated = true;
+        updateFields.lastSummarizedTranscript = meeting.lastSummarizedTranscript;
+      }
+    }
 
     const updated = await meetingService.updateMeeting(
       meetingId,
-      { title, description, status, startTime, endTime, summary, transcript, actionItems },
+      updateFields,
       userId
     );
 
@@ -113,6 +140,60 @@ export const deleteMeeting = async (req, res, next) => {
       success: true,
       message: 'Meeting session successfully deleted.',
       data: null
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Generate an on-demand AI summary for an active meeting
+ * POST /api/meetings/:id/summarize
+ */
+export const summarizeActiveMeeting = async (req, res, next) => {
+  try {
+    const meetingId = req.params.id;
+    const { transcript } = req.body;
+
+    if (!transcript || !transcript.trim()) {
+      throw new AppError('Transcript content is required for AI summary generation.', 400);
+    }
+
+    const meeting = await meetingService.getMeetingById(meetingId);
+
+    // Cache check: Return existing details if transcript hasn't changed
+    if (meeting.aiGenerated && meeting.lastSummarizedTranscript === transcript) {
+      return res.status(200).json({
+        success: true,
+        message: 'Serving cached AI summary from database.',
+        data: {
+          summary: meeting.summary,
+          keyDiscussionPoints: meeting.keyDiscussionPoints,
+          actionItems: meeting.actionItems
+        }
+      });
+    }
+
+    // Call AI Service to perform Gemini summary
+    const aiResult = await aiService.generateMeetingIntelligence(transcript);
+
+    // Save summary details directly to meeting schema (caching results to MongoDB)
+    const updated = await meetingService.updateMeetingSummaryInternal(meetingId, {
+      summary: aiResult.summary,
+      keyDiscussionPoints: aiResult.keyDiscussionPoints,
+      actionItems: aiResult.actionItems,
+      aiGenerated: true,
+      lastSummarizedTranscript: transcript
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'AI summary successfully compiled.',
+      data: {
+        summary: updated.summary,
+        keyDiscussionPoints: updated.keyDiscussionPoints,
+        actionItems: updated.actionItems
+      }
     });
   } catch (error) {
     next(error);

@@ -14,7 +14,10 @@ export const register = async (req, res, next) => {
       throw new AppError('Missing required inputs: name, email, and password must all be provided.', 400);
     }
 
-    const result = await authService.registerUser({ name, email, password, role });
+    const userAgent = req.headers['user-agent'] || 'Unknown Device';
+    const ipAddress = req.ip || 'Unknown IP';
+
+    const result = await authService.registerUser({ name, email, password, role, userAgent, ipAddress });
 
     res.status(201).json({
       success: true,
@@ -38,7 +41,10 @@ export const login = async (req, res, next) => {
       throw new AppError('Missing credentials. Please supply email and password.', 400);
     }
 
-    const result = await authService.loginUser({ email, password });
+    const userAgent = req.headers['user-agent'] || 'Unknown Device';
+    const ipAddress = req.ip || 'Unknown IP';
+
+    const result = await authService.loginUser({ email, password, userAgent, ipAddress });
 
     res.status(200).json({
       success: true,

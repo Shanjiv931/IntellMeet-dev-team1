@@ -41,7 +41,31 @@ const MeetingSchema = new mongoose.Schema(
     endTime: {
       type: Date,
     },
+    scheduledDate: {
+      type: String,
+      trim: true,
+    },
+    scheduledTime: {
+      type: String,
+      trim: true,
+    },
+    duration: {
+      type: Number,
+      default: 30,
+    },
     summary: {
+      type: String,
+      default: '',
+    },
+    keyDiscussionPoints: {
+      type: [String],
+      default: [],
+    },
+    aiGenerated: {
+      type: Boolean,
+      default: false,
+    },
+    lastSummarizedTranscript: {
       type: String,
       default: '',
     },

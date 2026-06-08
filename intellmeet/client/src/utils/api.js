@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://intellmeet-backend-5j5a.onrender.com/api';
 
 class ApiClient {
@@ -6,6 +8,16 @@ class ApiClient {
     this.refreshToken = localStorage.getItem('intellmeet_refresh_token');
     this.isRefreshing = false;
     this.refreshSubscribers = [];
+
+    // Create custom Axios instance
+    this.axiosInstance = axios.create({
+      baseURL: API_BASE_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    this.setupInterceptors();
   }
 
   setTokens(accessToken, refreshToken) {
@@ -32,75 +44,114 @@ class ApiClient {
     this.refreshSubscribers = [];
   }
 
+  setupInterceptors() {
+    // Request Interceptor: Attach the current Access Token if present
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        if (this.accessToken) {
+          config.headers['Authorization'] = `Bearer ${this.accessToken}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    // Response Interceptor: Catch errors and execute JWT token rotation logic
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+
+        // Determine if unauthorized / token expired
+        const isUnauthorized =
+          error.response?.status === 401 ||
+          (error.response?.status === 500 && error.response?.data?.message === 'jwt expired') ||
+          (error.response?.data?.message && error.response.data.message.includes('expired'));
+
+        // If unauthorized and we have a refresh token, try to rotate tokens
+        if (isUnauthorized && this.refreshToken && !originalRequest._retry) {
+          if (this.isRefreshing) {
+            // Queue this request until refresh is done
+            return new Promise((resolve) => {
+              this.subscribeTokenRefresh((newAccessToken) => {
+                originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+                resolve(this.axiosInstance(originalRequest));
+              });
+            });
+          }
+
+          originalRequest._retry = true;
+          this.isRefreshing = true;
+
+          try {
+            // Call refresh token endpoint using a fresh axios instance to bypass interceptors
+            const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+              refreshToken: this.refreshToken,
+            });
+
+            if (response.data?.success && response.data?.data?.tokens) {
+              const { accessToken: newAccess, refreshToken: newRefresh } = response.data.data.tokens;
+              
+              this.setTokens(newAccess, newRefresh);
+              this.isRefreshing = false;
+              this.onRefreshed(newAccess);
+
+              // Retry original request with new token
+              originalRequest.headers['Authorization'] = `Bearer ${newAccess}`;
+              return this.axiosInstance(originalRequest);
+            } else {
+              throw new Error('Refresh response format invalid');
+            }
+          } catch (refreshErr) {
+            this.isRefreshing = false;
+            this.clearTokens();
+            // Stale storage state is now prevented. Force page refresh so App.jsx re-evaluates session
+            window.location.reload();
+            return Promise.reject(refreshErr);
+          }
+        }
+
+        // If unauthorized and we DO NOT have a refresh token, sign out immediately
+        if (isUnauthorized && !this.refreshToken) {
+          this.clearTokens();
+          window.location.reload();
+        }
+
+        return Promise.reject(error);
+      }
+    );
+  }
+
   async request(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    
-    // Set headers
+    const method = options.method || 'GET';
     const headers = {
-      'Content-Type': 'application/json',
       ...options.headers,
     };
 
-    if (this.accessToken) {
-      headers['Authorization'] = `Bearer ${this.accessToken}`;
-    }
-
     const config = {
-      ...options,
-      headers,
+      url: endpoint,
+      method: method,
+      headers: headers,
     };
 
+    if (options.body) {
+      // Decode body if it's passed as a JSON string to keep compatibility with fetch options.body
+      config.data = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
+    }
+
     try {
-      let response = await fetch(url, config);
-
-      // Handle 401 Unauthorized -> try token rotation
-      if (response.status === 401 && this.refreshToken && !this.isRefreshing) {
-        this.isRefreshing = true;
-        
-        try {
-          const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ refreshToken: this.refreshToken }),
-          });
-
-          if (refreshResponse.ok) {
-            const refreshData = await refreshResponse.json();
-            const { accessToken: newAccess, refreshToken: newRefresh } = refreshData.data.tokens;
-            
-            this.setTokens(newAccess, newRefresh);
-            this.isRefreshing = false;
-            this.onRefreshed(newAccess);
-
-            // Re-fire original request with the fresh token
-            headers['Authorization'] = `Bearer ${newAccess}`;
-            response = await fetch(url, { ...options, headers });
-          } else {
-            // Refresh token expired or invalid -> sign out
-            this.isRefreshing = false;
-            this.clearTokens();
-            window.location.reload();
-            throw new Error('Session expired. Please log in again.');
-          }
-        } catch (refreshErr) {
-          this.isRefreshing = false;
-          this.clearTokens();
-          throw refreshErr;
-        }
-      }
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Something went wrong');
-      }
-
-      return responseData;
+      const response = await this.axiosInstance(config);
+      return response.data;
     } catch (err) {
-      console.error(`API request error on ${endpoint}:`, err);
-      throw err;
+      // Extract the server's operation error message or default to Axios error message
+      const serverMessage = err.response?.data?.message || err.message || 'Something went wrong';
+      const parsedError = new Error(serverMessage);
+      parsedError.status = err.response?.status;
+      parsedError.response = err.response;
+      console.error(`API request error on ${endpoint}:`, parsedError);
+      throw parsedError;
     }
   }
 
@@ -112,7 +163,7 @@ class ApiClient {
     return this.request(endpoint, {
       ...options,
       method: 'POST',
-      body: JSON.stringify(body),
+      body,
     });
   }
 
@@ -120,7 +171,7 @@ class ApiClient {
     return this.request(endpoint, {
       ...options,
       method: 'PUT',
-      body: JSON.stringify(body),
+      body,
     });
   }
 

@@ -47,6 +47,11 @@ const handleJWTExpiredError = () => ({
  * Global centralized Express error handler middleware
  */
 const errorMiddleware = (err, req, res, next) => {
+  // Map JWT validation errors to 401 Unauthorized
+  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError' || err.name === 'NotBeforeError') {
+    err.statusCode = 401;
+  }
+
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
