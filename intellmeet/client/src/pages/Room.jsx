@@ -6,6 +6,7 @@ import ChatPanel from '../components/room/ChatPanel';
 import ParticipantsPanel from '../components/room/ParticipantsPanel';
 import AiNotesPanel from '../components/room/AiNotesPanel';
 import RoomControls from '../components/room/RoomControls';
+import api from '../utils/api';
 import './Room.css';
 
 export default function Room({ onNavigate, user, meeting }) {
@@ -21,7 +22,7 @@ export default function Room({ onNavigate, user, meeting }) {
   const [activeSidebarTab, setActiveSidebarTab] = useState('participants'); // 'chat', 'participants', or 'ainotes'
   
   // Timer State
-  const [seconds, setSeconds] = useState(942); // Start at 15 mins 42 secs
+  const [seconds, setSeconds] = useState(0); // Start at 00:00
   
   // Responsive check state
   const [isMobile, setIsMobile] = useState(false);
@@ -38,6 +39,26 @@ export default function Room({ onNavigate, user, meeting }) {
   const timerRef = useRef(null);
   const peersRef = useRef({}); // WebRTC peer connections reference
 
+  // Local media stream state and tracking reference
+  const [localStream, setLocalStream] = useState(null);
+  const localStreamRef = useRef(null);
+
+  // Screen share stream state and reference
+  const [screenStream, setScreenStream] = useState(null);
+  const screenStreamRef = useRef(null);
+
+  // Map tracking remote streams (peerId -> MediaStream)
+  const [remoteStreams, setRemoteStreams] = useState({});
+
+  // List of active peer socket IDs in the room
+  const [peersList, setPeersList] = useState([]);
+
+  // Live caption state and history logs
+  const [liveCaption, setLiveCaption] = useState('');
+  const [transcriptHistory, setTranscriptHistory] = useState([]);
+  const recognitionRef = useRef(null);
+  const isListeningRef = useRef(false);
+
   // Responsive Layout detection
   useEffect(() => {
     const checkMobile = () => {
@@ -52,19 +73,196 @@ export default function Room({ onNavigate, user, meeting }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, [activeSidebarTab]);
 
-  // Tick timer every second
+  // Tick timer logic is initialized inside the socket joined-room-success handler
+
+  // Acquire Local Video/Audio Stream Tracks on Mount
   useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setSeconds(prev => prev + 1);
-    }, 1000);
-    
+    let activeStream = null;
+
+    const acquireMedia = async () => {
+      try {
+        console.log('Requesting local user media devices (video & audio)...');
+        activeStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true
+        });
+        
+        console.log('Local user media successfully acquired.');
+        setLocalStream(activeStream);
+        localStreamRef.current = activeStream;
+      } catch (err) {
+        console.error('Error acquiring user media devices:', err);
+        alert('Permission denied or failed to access camera/microphone. Operating in offline/avatar mode.');
+      }
+    };
+
+    acquireMedia();
+
+    // Cleanup tracks on unmount
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
+      if (activeStream) {
+        console.log('Stopping active stream tracks...');
+        activeStream.getTracks().forEach(track => track.stop());
+      }
+      if (localStreamRef.current) {
+        console.log('Stopping local stream ref tracks...');
+        localStreamRef.current.getTracks().forEach(track => track.stop());
       }
     };
   }, []);
+
+  // Sync hardware camera track state with UI controls
+  useEffect(() => {
+    if (localStreamRef.current) {
+      const videoTrack = localStreamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !isCameraOff;
+      }
+    }
+  }, [isCameraOff]);
+
+  // Sync hardware microphone track state with UI controls
+  useEffect(() => {
+    if (localStreamRef.current) {
+      const audioTrack = localStreamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !isMuted;
+      }
+    }
+  }, [isMuted]);
+
+  const handleToggleScreenShare = async () => {
+    if (!isSharingScreen) {
+      try {
+        console.log('Requesting screen capture stream...');
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        
+        console.log('Screen capture stream acquired.');
+        screenStreamRef.current = stream;
+        setScreenStream(stream);
+        setIsSharingScreen(true);
+
+        const screenTrack = stream.getVideoTracks()[0];
+
+        // Replace local camera track with screen share track on all peer connections
+        Object.values(peersRef.current).forEach(pc => {
+          const senders = pc.getSenders();
+          const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
+          if (videoSender) {
+            videoSender.replaceTrack(screenTrack);
+          }
+        });
+
+        // Automatically toggle off screen sharing if the user stops sharing via browser overlay
+        screenTrack.onended = () => {
+          console.log('Screen sharing track ended natively.');
+          stopScreenShare(stream);
+        };
+
+      } catch (err) {
+        console.error('Failed to acquire screen capture stream:', err);
+      }
+    } else {
+      if (screenStreamRef.current) {
+        stopScreenShare(screenStreamRef.current);
+      }
+    }
+  };
+
+  const stopScreenShare = (stream) => {
+    console.log('Stopping screen share stream...');
+    stream.getTracks().forEach(track => track.stop());
+    screenStreamRef.current = null;
+    setScreenStream(null);
+    setIsSharingScreen(false);
+
+    // Restore webcam track on all peer connections
+    const cameraTrack = localStreamRef.current ? localStreamRef.current.getVideoTracks()[0] : null;
+    if (cameraTrack) {
+      Object.values(peersRef.current).forEach(pc => {
+        const senders = pc.getSenders();
+        const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
+        if (videoSender) {
+          videoSender.replaceTrack(cameraTrack);
+        }
+      });
+    }
+  };
+
+  // Initialize Web Speech API for Live Captions
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn('SpeechRecognition API is not supported in this browser.');
+      return;
+    }
+
+    console.log('Initializing SpeechRecognition client...');
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      console.log('SpeechRecognition active and listening.');
+      isListeningRef.current = true;
+    };
+
+    recognition.onresult = (event) => {
+      let interimTranscript = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          const finalPhrase = result[0].transcript.trim();
+          if (finalPhrase) {
+            console.log(`Speech committed: "${finalPhrase}"`);
+            setTranscriptHistory(prev => [...prev, `${safeUser.name}: ${finalPhrase}`]);
+          }
+        } else {
+          interimTranscript += result[0].transcript;
+        }
+      }
+
+      setLiveCaption(interimTranscript);
+    };
+
+    recognition.onend = () => {
+      console.log('SpeechRecognition service ended.');
+      isListeningRef.current = false;
+      
+      // Auto-restart if user has not left the meeting room
+      if (socketRef.current && socketRef.current.connected) {
+        try {
+          console.log('Re-starting SpeechRecognition service...');
+          recognition.start();
+        } catch (e) {
+          console.warn('Failed to restart SpeechRecognition:', e);
+        }
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error('SpeechRecognition error encountered:', event.error);
+    };
+
+    recognitionRef.current = recognition;
+    
+    // Start listening
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error('Failed to start SpeechRecognition:', e);
+    }
+
+    return () => {
+      console.log('Stopping SpeechRecognition client on unmount...');
+      if (recognitionRef.current) {
+        recognitionRef.current.onend = null; // Prevent restart loops
+        recognitionRef.current.stop();
+      }
+    };
+  }, [safeUser.name]);
 
   // Socket Connection and Event Listeners
   useEffect(() => {
@@ -87,7 +285,15 @@ export default function Room({ onNavigate, user, meeting }) {
     // Handle Room joined confirmation
     socketRef.current.on('joined-room-success', ({ roomId, activePeers }) => {
       console.log(`Successfully entered socket room: ${roomId}. Active peers in room:`, activePeers);
+      setPeersList(activePeers);
       
+      // Start the meeting timer interval once joined successfully
+      if (!timerRef.current) {
+        timerRef.current = setInterval(() => {
+          setSeconds(prev => prev + 1);
+        }, 1000);
+      }
+
       // In-mesh WebRTC: Initiate peer connection objects to each active peer in room
       activePeers.forEach(peerId => {
         initializePeerConnection(peerId, true);
@@ -154,6 +360,12 @@ export default function Room({ onNavigate, user, meeting }) {
     // Handle peer joins/disconnects
     socketRef.current.on('user-joined', (data) => {
       console.log('Peer joined signaling loop:', data.socketId);
+      setPeersList(prev => {
+        if (!prev.includes(data.socketId)) {
+          return [...prev, data.socketId];
+        }
+        return prev;
+      });
     });
 
     socketRef.current.on('user-left', (data) => {
@@ -162,6 +374,12 @@ export default function Room({ onNavigate, user, meeting }) {
         peersRef.current[data.socketId].close();
         delete peersRef.current[data.socketId];
       }
+      setPeersList(prev => prev.filter(id => id !== data.socketId));
+      setRemoteStreams(prev => {
+        const next = { ...prev };
+        delete next[data.socketId];
+        return next;
+      });
     });
 
     // Sync peer media changes (camera/mute/share states)
@@ -179,6 +397,17 @@ export default function Room({ onNavigate, user, meeting }) {
       // Close all WebRTC connections on leave
       Object.values(peersRef.current).forEach(pc => pc.close());
       peersRef.current = {};
+
+      // Stop screen sharing tracks if active on unmount
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+
+      // Clear the meeting timer interval on unmount
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
   }, [roomId]);
 
@@ -206,9 +435,22 @@ export default function Room({ onNavigate, user, meeting }) {
       }
     };
 
+    // Attach local stream tracks to connection
+    const currentStream = screenStreamRef.current || localStreamRef.current;
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => {
+        pc.addTrack(track, currentStream);
+      });
+    }
+
     // Handle streams
     pc.ontrack = (event) => {
       console.log(`WebRTC stream track resolved from peer: ${peerId}`);
+      const [remoteStream] = event.streams;
+      setRemoteStreams(prev => ({
+        ...prev,
+        [peerId]: remoteStream
+      }));
     };
 
     peersRef.current[peerId] = pc;
@@ -284,30 +526,23 @@ export default function Room({ onNavigate, user, meeting }) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+
+    // Stop screen sharing tracks if active
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach(track => track.stop());
+    }
     
     // Attempt meeting status update (Complete meeting on host leave)
     if (meeting?._id) {
-      const minutesStr = Math.floor(seconds / 60);
-      const secondsStr = seconds % 60;
-      const durationStr = `${minutesStr} mins ${secondsStr} secs`;
-
-      // Generate a dynamic, high-fidelity recap based on the actual meeting title!
       const title = meeting.title || "Instant Collaboration Sync";
-      const summaryText = `The meeting "${title}" was successfully completed. The host and participants collaborated for ${durationStr} to discuss priorities, establish architectural schemas, and define milestones. Next steps were assigned to ensure momentum.`;
       
-      const transcriptText = `[00:01] ${safeUser.name}: Welcome everyone. Let's begin our session on "${title}".\n[05:12] Participants: Let's make sure our database connection is persistent.\n[10:45] ${safeUser.name}: Understood. I will handle the schema verification. Let's close the meeting and start coding.`;
-
-      const actionItems = [
-        { text: `Complete validation for "${title}" implementation flow`, completed: false, assignee: safeUser.name },
-        { text: 'Deploy final client code changes to Remote Vercel host', completed: false, assignee: safeUser.name },
-        { text: 'Verify Atlas sharded collection indexes', completed: true, assignee: 'System' }
-      ];
+      // Stitch together transcript logs from speech recognition history
+      const localTranscriptStr = transcriptHistory.join('\n');
+      const transcriptText = localTranscriptStr || `${safeUser.name}: Welcome everyone to our meeting "${title}". Let's discuss project status and next steps.`;
 
       api.put(`/meetings/${meeting._id}`, { 
         status: 'COMPLETED',
-        summary: summaryText,
         transcript: transcriptText,
-        actionItems: actionItems,
         endTime: new Date().toISOString()
       })
       .catch(err => console.warn('Failed to update meeting completion status', err));
@@ -329,6 +564,10 @@ export default function Room({ onNavigate, user, meeting }) {
           isMuted={isMuted} 
           isCameraOff={isCameraOff} 
           isSharingScreen={isSharingScreen} 
+          localStream={localStream}
+          screenStream={screenStream}
+          peersList={peersList}
+          remoteStreams={remoteStreams}
         />
 
         {/* Right Sidebar Panel */}
@@ -378,10 +617,11 @@ export default function Room({ onNavigate, user, meeting }) {
                       isMuted={isMuted}
                       isCameraOff={isCameraOff}
                       isSharingScreen={isSharingScreen}
+                      peersList={Object.keys(remoteStreams)}
                     />
                   )}
                   {activeSidebarTab === 'ainotes' && (
-                    <AiNotesPanel meeting={meeting} user={safeUser} />
+                    <AiNotesPanel meeting={meeting} user={safeUser} transcriptHistory={transcriptHistory} />
                   )}
                 </div>
               </div>
@@ -408,13 +648,14 @@ export default function Room({ onNavigate, user, meeting }) {
                   </div>
                   <div className="sidebar-tab-content">
                     {activeSidebarTab === 'ainotes' ? (
-                      <AiNotesPanel meeting={meeting} user={safeUser} />
+                      <AiNotesPanel meeting={meeting} user={safeUser} transcriptHistory={transcriptHistory} />
                     ) : (
                       <ParticipantsPanel 
                         user={safeUser}
                         isMuted={isMuted}
                         isCameraOff={isCameraOff}
                         isSharingScreen={isSharingScreen}
+                        peersList={Object.keys(remoteStreams)}
                       />
                     )}
                   </div>
@@ -436,6 +677,14 @@ export default function Room({ onNavigate, user, meeting }) {
         )}
       </div>
 
+      {/* Live Caption Display Overlay */}
+      {liveCaption && (
+        <div className="live-caption-overlay">
+          <span className="caption-sender">{safeUser.name}:</span>
+          <span className="caption-text">{liveCaption}</span>
+        </div>
+      )}
+
       {/* Bottom Control Toolbar */}
       <RoomControls
         isMuted={isMuted}
@@ -443,7 +692,7 @@ export default function Room({ onNavigate, user, meeting }) {
         isCameraOff={isCameraOff}
         onToggleCamera={() => setIsCameraOff(!isCameraOff)}
         isSharingScreen={isSharingScreen}
-        onToggleScreenShare={() => setIsSharingScreen(!isSharingScreen)}
+        onToggleScreenShare={handleToggleScreenShare}
         showSidebar={showSidebar}
         activeSidebarTab={activeSidebarTab}
         onToggleSidebarPanel={handleToggleSidebarPanel}

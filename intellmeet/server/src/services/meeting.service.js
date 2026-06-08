@@ -11,7 +11,7 @@ const isDBConnected = () => mongoose.connection.readyState === 1;
 /**
  * Create a new meeting
  */
-export const createMeeting = async ({ title, description, hostId, startTime, endTime }) => {
+export const createMeeting = async ({ title, description, hostId, startTime, endTime, scheduledDate, scheduledTime, duration }) => {
   const finalStartTime = startTime ? new Date(startTime) : new Date();
   
   if (isDBConnected()) {
@@ -22,6 +22,9 @@ export const createMeeting = async ({ title, description, hostId, startTime, end
         host: hostId,
         startTime: finalStartTime,
         endTime: endTime ? new Date(endTime) : null,
+        scheduledDate,
+        scheduledTime,
+        duration: duration || 30,
         status: 'SCHEDULED'
       });
       return await Meeting.findById(newMeeting._id).populate('host', 'name email role');
@@ -41,6 +44,9 @@ export const createMeeting = async ({ title, description, hostId, startTime, end
     status: 'SCHEDULED',
     startTime: finalStartTime,
     endTime: endTime ? new Date(endTime) : null,
+    scheduledDate,
+    scheduledTime,
+    duration: duration || 30,
     createdAt: new Date(),
     updatedAt: new Date()
   };
@@ -195,4 +201,43 @@ export const deleteMeeting = async (meetingId, userId) => {
   memoryMeetings.splice(index, 1);
   logger.info(`Resilient DB Fallback: Deleted meeting from in-memory array: ${meetingId}`);
   return true;
+};
+
+/**
+ * Update meeting summary data (Internal bypass for summaries triggerable by any participant)
+ */
+export const updateMeetingSummaryInternal = async (meetingId, summaryData) => {
+  if (isDBConnected()) {
+    try {
+      const updated = await Meeting.findByIdAndUpdate(meetingId, summaryData, {
+        new: true,
+        runValidators: true
+      });
+      if (!updated) {
+        throw new AppError('Meeting not found.', 404);
+      }
+      return updated;
+    } catch (err) {
+      if (err instanceof AppError) throw err;
+      logger.error('Mongoose updateMeetingSummaryInternal error:', err);
+      throw new AppError('Failed to update meeting summary.', 500);
+    }
+  }
+
+  // Memory fallback query
+  const index = memoryMeetings.findIndex(m => m._id.toString() === meetingId.toString());
+  if (index === -1) {
+    throw new AppError('Meeting not found in-memory.', 404);
+  }
+
+  const meeting = memoryMeetings[index];
+  const updatedMeeting = {
+    ...meeting,
+    ...summaryData,
+    updatedAt: new Date()
+  };
+
+  memoryMeetings[index] = updatedMeeting;
+  logger.info(`Resilient DB Fallback: Updated meeting summary in-memory: ${meetingId}`);
+  return updatedMeeting;
 };

@@ -32,6 +32,10 @@ const UserSchema = new mongoose.Schema(
       },
       default: 'MEMBER',
     },
+    avatar: {
+      type: String,
+      default: '',
+    },
   },
   {
     timestamps: true, // Auto-injects createdAt and updatedAt

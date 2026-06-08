@@ -26,7 +26,8 @@ export const connectDB = async (attempt = 1) => {
     if (attempt < MAX_RETRY_ATTEMPTS) {
       const delay = INITIAL_RETRY_DELAY * Math.pow(2, attempt - 1);
       logger.warn(`Retrying database connection in ${delay}ms...`);
-      setTimeout(() => connectDB(attempt + 1), delay);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return connectDB(attempt + 1);
     } else {
       logger.warn('⚠️ ⚠️ ⚠️ CRITICAL WARNING: Max database connection attempts reached. MongoDB Atlas connection is currently blocked (e.g. un-whitelisted IP or network firewall).');
       logger.warn('⚠️ ⚠️ ⚠️ IntellMeet Backend will proceed to boot in highly resilient "In-Memory Fallback" mode for seamless offline testing.');

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import './VideoCard.css';
 
 export default function VideoCard({
@@ -9,8 +9,11 @@ export default function VideoCard({
   isCameraOff = false,
   isLocalUser = false,
   isScreenShare = false,
-  avatarBg = 'bg-blue'
+  avatarBg = 'bg-blue',
+  stream = null
 }) {
+  const videoRef = useRef(null);
+
   // Map avatar bg class names to premium CSS gradients
   const getGradientClass = (bg) => {
     switch (bg) {
@@ -27,6 +30,17 @@ export default function VideoCard({
     }
   };
 
+  // Bind the incoming MediaStream object to the video element
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+      // Guarantee video playback on mount/toggle
+      videoRef.current.play().catch(err => {
+        console.warn('Auto-play failed for video element:', err);
+      });
+    }
+  }, [stream, isCameraOff, isScreenShare]);
+
   return (
     <div className={`video-card ${isActiveSpeaker ? 'active-speaker' : ''} ${isScreenShare ? 'screen-share-mode' : ''}`}>
       {/* Active Speaker Glow overlay */}
@@ -35,8 +49,8 @@ export default function VideoCard({
       {/* Main Video Area */}
       <div className={`video-content-wrapper ${getGradientClass(avatarBg)}`}>
         {isScreenShare ? (
-          <div className="screen-share-container">
-            <div className="screen-share-overlay">
+          <div className="screen-share-container" style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <div className="screen-share-overlay" style={{ zIndex: 5 }}>
               <svg className="screen-share-icon animate-pulse" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
                 <line x1="8" y1="21" x2="16" y2="21"/>
@@ -44,6 +58,16 @@ export default function VideoCard({
               </svg>
               <span className="screen-share-text">Screen Share Active</span>
             </div>
+            {/* Render real screen capture stream */}
+            {stream && (
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted={isLocalUser}
+                style={{ width: '100%', height: '100%', objectFit: 'contain', position: 'absolute', top: 0, left: 0 }}
+              />
+            )}
           </div>
         ) : isCameraOff ? (
           <div className="video-off-container">
@@ -52,8 +76,36 @@ export default function VideoCard({
             </div>
             <span className="video-off-indicator">Camera Off</span>
           </div>
+        ) : stream ? (
+          /* Live Video Stream Feed */
+          <div className={`video-feed-real ${isLocalUser ? 'local-feed' : ''}`} style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted={isLocalUser}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }}
+            />
+            {isLocalUser && (
+              <div className="local-feed-overlay" style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 10 }}>
+                <span className="live-badge">
+                  <span className="live-dot"></span>
+                  Live
+                </span>
+              </div>
+            )}
+            {/* Visual audio wave representation for active speaker */}
+            {isActiveSpeaker && (
+              <div className="audio-wave" style={{ zIndex: 10 }}>
+                <span className="wave-bar"></span>
+                <span className="wave-bar"></span>
+                <span className="wave-bar"></span>
+                <span className="wave-bar"></span>
+              </div>
+            )}
+          </div>
         ) : (
-          /* Simulated Live Feed */
+          /* Simulated Live Feed (Mock Fallback) */
           <div className={`video-feed-mock ${isLocalUser ? 'local-feed' : ''}`}>
             {isLocalUser && (
               <div className="local-feed-overlay">

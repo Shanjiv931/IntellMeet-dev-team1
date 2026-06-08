@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import DashboardNavbar from '../components/DashboardNavbar';
+import WorkspaceKanban from '../components/room/WorkspaceKanban';
+import ProfileSettings from '../components/settings/ProfileSettings';
+import AccountSettings from '../components/settings/AccountSettings';
+import NotificationSettings from '../components/settings/NotificationSettings';
+import AppearanceSettings from '../components/settings/AppearanceSettings';
+import MeetingSettings from '../components/settings/MeetingSettings';
+import AiSettings from '../components/settings/AiSettings';
+import SecuritySettings from '../components/settings/SecuritySettings';
+import WorkspaceSettings from '../components/settings/WorkspaceSettings';
+import AnalyticsDashboard from '../components/analytics/AnalyticsDashboard';
 import api from '../utils/api';
 import './Dashboard.css';
 
@@ -20,11 +30,72 @@ export default function Dashboard({ onNavigate, user }) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStep, setUploadStep] = useState(0);
 
-  // App Settings states
+  // Scheduler modal states
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [scheduleTitle, setScheduleTitle] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduleDuration, setScheduleDuration] = useState(30);
+  const [scheduleDescription, setScheduleDescription] = useState('');
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [scheduleError, setScheduleError] = useState('');
+  const [scheduleSuccess, setScheduleSuccess] = useState('');
+  const [editingMeetingId, setEditingMeetingId] = useState(null);
+
+  // App Settings states (SaaS Settings module states)
+  const [settingsTab, setSettingsTab] = useState('profile');
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profileAvatar, setProfileAvatar] = useState('');
+  const [profileRole, setProfileRole] = useState('MEMBER');
+  
+  // Account tab states
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [sessions, setSessions] = useState([]);
+  
+  // Notifications tab states
+  const [emailNotif, setEmailNotif] = useState(true);
+  const [meetingReminders, setMeetingReminders] = useState(true);
+  const [taskReminders, setTaskReminders] = useState(true);
+  const [aiSummaryNotif, setAiSummaryNotif] = useState(true);
+  
+  // Appearance tab states
   const [theme, setTheme] = useState('dark');
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [autoSaveTranscripts, setAutoSaveTranscripts] = useState(true);
-  const [settingsSuccess, setSettingsSuccess] = useState(false);
+  const [compactMode, setCompactMode] = useState(false);
+  const [fontSize, setFontSize] = useState('medium');
+  
+  // Meeting Preferences tab states
+  const [joinMicOn, setJoinMicOn] = useState(false);
+  const [joinCamOn, setJoinCamOn] = useState(false);
+  const [autoLiveCaptions, setAutoLiveCaptions] = useState(true);
+  const [defaultDuration, setDefaultDuration] = useState(30);
+  const [recordingPref, setRecordingPref] = useState('cloud');
+  
+  // AI Preferences tab states
+  const [enableAiSummaries, setEnableAiSummaries] = useState(true);
+  const [enableActionItems, setEnableActionItems] = useState(true);
+  const [enableLiveTranscription, setEnableLiveTranscription] = useState(true);
+  const [aiLanguage, setAiLanguage] = useState('en-US');
+  
+  // Security tab states
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorMethod, setTwoFactorMethod] = useState('none');
+  const [shareAnalytics, setShareAnalytics] = useState(true);
+  const [publicProfile, setPublicProfile] = useState(false);
+  
+  // Workspace tab states
+  const [defaultWorkspace, setDefaultWorkspace] = useState('My Workspace');
+  const [allowInvites, setAllowInvites] = useState(true);
+  const [restrictDomain, setRestrictDomain] = useState('');
+  const [defaultColumn, setDefaultColumn] = useState('TODO');
+  const [autoArchiveDone, setAutoArchiveDone] = useState(false);
+
+  // Status indicators
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+  const [settingsLoading, setSettingsLoading] = useState(false);
 
   const safeUser = user || { name: "IntellMeet User", email: "admin@intellmeet.app", role: "ADMIN", avatar: "IM" };
   const firstName = (safeUser.name && typeof safeUser.name === 'string') ? safeUser.name.split(' ')[0] : 'IntellMeet';
@@ -44,9 +115,208 @@ export default function Dashboard({ onNavigate, user }) {
     }
   };
 
+  const showToast = (msg, type = 'success') => {
+    setToastMessage(msg);
+    setToastType(type);
+    setTimeout(() => {
+      setToastMessage('');
+    }, 3000);
+  };
+
+  const fetchUserSettings = async () => {
+    try {
+      const response = await api.get('/users/settings');
+      if (response.success && response.data.settings) {
+        const s = response.data.settings;
+        setEmailNotif(s.emailNotifications);
+        setMeetingReminders(s.meetingReminders);
+        setTaskReminders(s.taskReminders);
+        setAiSummaryNotif(s.aiSummaryNotifications);
+        setTheme(s.theme);
+        setCompactMode(s.compactMode);
+        setFontSize(s.fontSize);
+        setJoinMicOn(s.joinMicOn);
+        setJoinCamOn(s.joinCamOn);
+        setAutoLiveCaptions(s.autoLiveCaptions);
+        setDefaultDuration(s.defaultDuration);
+        setRecordingPref(s.recordingPreference);
+        setEnableAiSummaries(s.enableAiSummaries);
+        setEnableActionItems(s.enableActionItems);
+        setEnableLiveTranscription(s.enableLiveTranscription);
+        setAiLanguage(s.aiLanguage);
+        setTwoFactorEnabled(s.twoFactorEnabled);
+        setTwoFactorMethod(s.twoFactorMethod);
+        setShareAnalytics(s.privacyControls?.shareAnalytics ?? true);
+        setPublicProfile(s.privacyControls?.publicProfile ?? false);
+        setDefaultWorkspace(s.defaultWorkspace);
+        setAllowInvites(s.teamPreferences?.allowInvites ?? true);
+        setRestrictDomain(s.teamPreferences?.restrictDomain ?? '');
+        setDefaultColumn(s.kanbanPreferences?.defaultColumn ?? 'TODO');
+        setAutoArchiveDone(s.kanbanPreferences?.autoArchiveDone ?? false);
+      }
+    } catch (err) {
+      console.error('Failed to load user settings', err);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const response = await api.get('/auth/me');
+      if (response.success && response.data.user) {
+        setProfileName(response.data.user.name);
+        setProfileEmail(response.data.user.email);
+        setProfileAvatar(response.data.user.avatar || '');
+        setProfileRole(response.data.user.role || 'MEMBER');
+      }
+    } catch (err) {
+      console.error('Failed to load profile details', err);
+    }
+  };
+
+  const fetchSessions = async () => {
+    try {
+      const response = await api.get('/users/sessions');
+      if (response.success && response.data.sessions) {
+        setSessions(response.data.sessions);
+      }
+    } catch (err) {
+      console.error('Failed to load sessions', err);
+    }
+  };
+
+  const handleSaveSettings = async (tabName, payload) => {
+    setSettingsLoading(true);
+    try {
+      const response = await api.put('/users/settings', payload);
+      if (response.success) {
+        showToast('Settings saved successfully!');
+        fetchUserSettings();
+      } else {
+        showToast('Failed to save settings.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Failed to update settings.', 'error');
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const handleProfileSave = async (e) => {
+    e.preventDefault();
+    setSettingsLoading(true);
+    try {
+      const response = await api.put('/users/profile', {
+        name: profileName,
+        email: profileEmail,
+        avatar: profileAvatar
+      });
+      if (response.success) {
+        showToast('Profile updated successfully!');
+        fetchProfile();
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Failed to update profile.', 'error');
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      showToast('New passwords do not match.', 'error');
+      return;
+    }
+    setSettingsLoading(true);
+    try {
+      const response = await api.put('/users/change-password', {
+        oldPassword,
+        newPassword
+      });
+      if (response.success) {
+        showToast('Password changed successfully!');
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Failed to change password.', 'error');
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const doubleCheck = confirm('WARNING: This will permanently delete your account, meetings, tasks, and settings. This cannot be undone! Proceed?');
+    if (!doubleCheck) return;
+
+    try {
+      const response = await api.delete('/users/account');
+      if (response.success) {
+        alert('Your account has been deleted successfully.');
+        onNavigate('landing');
+      }
+    } catch (err) {
+      alert('Failed to delete account: ' + err.message);
+    }
+  };
+
+  const handleTerminateSession = async (sessionId) => {
+    try {
+      const response = await api.delete(`/users/sessions/${sessionId}`);
+      if (response.success) {
+        showToast('Session terminated successfully.');
+        fetchSessions();
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to terminate session.', 'error');
+    }
+  };
+
+  const handleLogoutAllOtherDevices = async () => {
+    try {
+      const response = await api.delete('/users/sessions');
+      if (response.success) {
+        showToast('Successfully signed out other devices.');
+        fetchSessions();
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to terminate sessions.', 'error');
+    }
+  };
+
   useEffect(() => {
     fetchMeetings();
-  }, []);
+    fetchUserSettings();
+    fetchProfile();
+    fetchSessions();
+  }, [currentTab]);
+
+  // Apply Appearance Preferences to document root
+  useEffect(() => {
+    // 1. Theme
+    if (theme === 'light') {
+      document.body.classList.add('light-theme');
+      document.body.classList.remove('dark-theme');
+    } else {
+      document.body.classList.add('dark-theme');
+      document.body.classList.remove('light-theme');
+    }
+
+    // 2. Compact Mode
+    if (compactMode) {
+      document.body.classList.add('compact-layout');
+    } else {
+      document.body.classList.remove('compact-layout');
+    }
+
+    // 3. Font Size
+    document.body.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
+    document.body.classList.add(`font-size-${fontSize}`);
+  }, [theme, compactMode, fontSize]);
 
   // Filter meetings by search query in title, description, summary, transcript
   const filteredMeetings = meetings.filter(m => {
@@ -123,6 +393,32 @@ export default function Dashboard({ onNavigate, user }) {
     );
   });
 
+  const handleConvertToKanban = async (actionItem, meetingId) => {
+    const dueDatePrompt = prompt(`Enter due date for task "${actionItem.text}" (YYYY-MM-DD) or leave empty:`);
+    let dueDate = null;
+    if (dueDatePrompt) {
+      dueDate = new Date(dueDatePrompt).toISOString();
+    }
+
+    try {
+      const response = await api.post('/tasks', {
+        title: actionItem.text,
+        description: `Converted from meeting action item.`,
+        status: 'TODO',
+        assigneeName: actionItem.assignee || '',
+        dueDate: dueDate,
+        meetingId: meetingId
+      });
+
+      if (response.success) {
+        alert('Action item successfully converted to Kanban task and added to Todo!');
+      }
+    } catch (err) {
+      console.error('Failed to convert action item to task:', err);
+      alert('Could not convert action item to task: ' + err.message);
+    }
+  };
+
   const handleStartInstantMeeting = async () => {
     try {
       const title = `Instant Sync - ${firstName}`;
@@ -141,21 +437,122 @@ export default function Dashboard({ onNavigate, user }) {
     }
   };
 
-  const handleScheduleCall = async () => {
-    const title = prompt("Enter meeting title:", `Sprint Alignment - ${firstName}`);
-    if (!title) return;
+  const handleScheduleCall = () => {
+    setEditingMeetingId(null);
+    setScheduleTitle(''); // Leave title blank by default to look professional!
+    setScheduleDate('');
+    setScheduleTime('');
+    setScheduleDuration(30);
+    setScheduleDescription('');
+    setScheduleError('');
+    setScheduleSuccess('');
+    setIsScheduleModalOpen(true);
+  };
+
+  const handleScheduleSubmit = async (e) => {
+    e.preventDefault();
+    setScheduleError('');
+    setScheduleSuccess('');
+
+    if (!scheduleTitle.trim()) {
+      setScheduleError('Meeting title is required.');
+      return;
+    }
+    if (!scheduleDate) {
+      setScheduleError('Meeting date is required.');
+      return;
+    }
+    if (!scheduleTime) {
+      setScheduleError('Start time is required.');
+      return;
+    }
+
+    const selectedDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - 5); // Allow slightly in-the-past margin of 5 mins for scheduling ease
+    if (selectedDateTime < now) {
+      setScheduleError('Meeting time cannot be in the past.');
+      return;
+    }
+
+    setIsScheduling(true);
 
     try {
-      const response = await api.post('/meetings', {
-        title,
-        description: "Scheduled sprint meeting session.",
-        startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      });
+      if (editingMeetingId) {
+        await api.put(`/meetings/${editingMeetingId}`, {
+          title: scheduleTitle,
+          description: scheduleDescription,
+          scheduledDate: scheduleDate,
+          scheduledTime: scheduleTime,
+          duration: parseInt(scheduleDuration) || 30,
+          startTime: selectedDateTime.toISOString()
+        });
+        setScheduleSuccess('Meeting details successfully updated!');
+      } else {
+        await api.post('/meetings', {
+          title: scheduleTitle,
+          description: scheduleDescription,
+          scheduledDate: scheduleDate,
+          scheduledTime: scheduleTime,
+          duration: parseInt(scheduleDuration) || 30,
+          startTime: selectedDateTime.toISOString()
+        });
+        setScheduleSuccess('Meeting successfully scheduled!');
+      }
 
-      alert('Meeting scheduled successfully!');
       fetchMeetings();
+      
+      setTimeout(() => {
+        setIsScheduleModalOpen(false);
+      }, 1500);
     } catch (err) {
-      alert('Failed to schedule meeting: ' + err.message);
+      console.error(err);
+      setScheduleError(err.message || 'Failed to save meeting.');
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
+  const handleEditMeetingClick = (m) => {
+    setEditingMeetingId(m._id || m.id);
+    setScheduleTitle(m.title || '');
+    setScheduleDate(m.scheduledDate || '');
+    setScheduleTime(m.scheduledTime || '');
+    setScheduleDuration(m.duration || 30);
+    setScheduleDescription(m.description || '');
+    setScheduleError('');
+    setScheduleSuccess('');
+    setIsScheduleModalOpen(true);
+  };
+
+  const handleDeleteMeetingClick = async (meetingId) => {
+    const doubleCheck = confirm('Are you sure you want to permanently delete this meeting? This action cannot be undone.');
+    if (!doubleCheck) return;
+
+    try {
+      const response = await api.delete(`/meetings/${meetingId}`);
+      if (response.success) {
+        showToast('Meeting successfully deleted.');
+        fetchMeetings();
+      } else {
+        showToast('Failed to delete meeting.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Failed to delete meeting.', 'error');
+    }
+  };
+
+  const handleStartMeeting = async (meeting) => {
+    try {
+      const meetingId = meeting._id || meeting.id;
+      const response = await api.put(`/meetings/${meetingId}`, {
+        status: 'ACTIVE'
+      });
+      await fetchMeetings();
+      onNavigate('lobby', response.data.meeting);
+    } catch (err) {
+      alert('Failed to start meeting: ' + err.message);
     }
   };
 
@@ -239,13 +636,11 @@ export default function Dashboard({ onNavigate, user }) {
 
       const meetingId = createRes.data.meeting._id || createRes.data.meeting.id;
 
-      // 2. Update status and save summaries
+      // 2. Update status and let backend compile real AI summary from transcript
       await api.put(`/meetings/${meetingId}`, {
         status: 'COMPLETED',
         endTime: new Date().toISOString(),
-        summary: generated.summary,
-        transcript: generated.transcript,
-        actionItems: generated.actionItems
+        transcript: generated.transcript
       });
 
       // Reset states
@@ -260,12 +655,6 @@ export default function Dashboard({ onNavigate, user }) {
       alert("Failed to save uploaded recording summary: " + err.message);
       setIsUploading(false);
     }
-  };
-
-  const handleSaveSettings = (e) => {
-    e.preventDefault();
-    setSettingsSuccess(true);
-    setTimeout(() => setSettingsSuccess(false), 3000);
   };
 
   const currentSummaryItem = recentMeetings[selectedSummary] || recentMeetings[0];
@@ -372,7 +761,7 @@ export default function Dashboard({ onNavigate, user }) {
                   ) : upcomingMeetings.length === 0 ? (
                     <div className="widget-empty-state" style={{ padding: '24px', textAlign: 'center' }}>
                       <p style={{ color: 'var(--text-muted)', marginBottom: '12px', fontSize: '0.95rem' }}>No upcoming meetings scheduled.</p>
-                      <button className="btn-join" onClick={handleStartInstantMeeting}>Launch One Now</button>
+                      <button className="btn-join" onClick={handleStartInstantMeeting}>Create your first meeting</button>
                     </div>
                   ) : (
                     <div className="widget-list">
@@ -381,18 +770,38 @@ export default function Dashboard({ onNavigate, user }) {
                         const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         const dateStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
                         
+                        const isHost = meeting.host && (
+                          meeting.host === safeUser.id || 
+                          meeting.host._id === safeUser.id || 
+                          meeting.host.id === safeUser.id ||
+                          meeting.host.email === safeUser.email
+                        );
+                        const isActive = meeting.status === 'ACTIVE';
+
                         return (
                           <div className="meeting-row-item" key={meeting._id || meeting.id}>
                             <div className="meeting-info-col">
                               <h4>{meeting.title}</h4>
-                              <span>{dateStr} at {timeStr}</span>
+                              <span>{dateStr} at {timeStr} ({meeting.duration || 30} mins)</span>
                             </div>
-                            <button 
-                              className="btn-join" 
-                              onClick={() => onNavigate('lobby', meeting)}
-                            >
-                              Join
-                            </button>
+                            {isActive ? (
+                              <button 
+                                className="btn-join" 
+                                onClick={() => onNavigate('lobby', meeting)}
+                              >
+                                Join
+                              </button>
+                            ) : isHost ? (
+                              <button 
+                                className="btn-join" 
+                                style={{ backgroundColor: '#10b981' }}
+                                onClick={() => handleStartMeeting(meeting)}
+                              >
+                                Start
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: '12.5px', color: 'var(--text-muted)', fontStyle: 'italic', paddingRight: '8px' }}>Scheduled</span>
+                            )}
                           </div>
                         );
                       })}
@@ -411,7 +820,7 @@ export default function Dashboard({ onNavigate, user }) {
                     <div className="widget-loading-state" style={{ padding: '16px 0', opacity: 0.7 }}>Loading history...</div>
                   ) : recentMeetings.length === 0 ? (
                     <div className="widget-empty-state" style={{ padding: '24px', textAlign: 'center', opacity: 0.7 }}>
-                      <p>No completed meetings found in database.</p>
+                      <p>No completed meetings</p>
                     </div>
                   ) : (
                     <div className="widget-list">
@@ -520,8 +929,8 @@ export default function Dashboard({ onNavigate, user }) {
                 <div style={{ padding: '40px', textAlign: 'center', opacity: 0.7 }}>Loading meetings data...</div>
               ) : filteredMeetings.length === 0 ? (
                 <div style={{ padding: '60px', textAlign: 'center', opacity: 0.7 }}>
-                  <h3>No meetings match your request.</h3>
-                  <p style={{ marginTop: '8px' }}>Create an instant session or adjust your search filter.</p>
+                  <h3>No meetings scheduled</h3>
+                  <p style={{ marginTop: '8px' }}>Create your first meeting</p>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
@@ -550,6 +959,48 @@ export default function Dashboard({ onNavigate, user }) {
                           <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.4', minHeight: '36px' }}>
                             {m.description || "No description provided."}
                           </p>
+                          {m.host && (m.host === safeUser.id || m.host._id === safeUser.id || m.host.id === safeUser.id || m.host.email === safeUser.email || (typeof m.host === 'object' && (m.host.id === safeUser.id || m.host._id === safeUser.id || m.host.email === safeUser.email))) && (
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                              <button 
+                                onClick={() => handleEditMeetingClick(m)}
+                                style={{
+                                  fontSize: '11px', 
+                                  color: 'var(--text-main)', 
+                                  border: '1px solid var(--border-color)', 
+                                  borderRadius: '6px', 
+                                  padding: '4px 8px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  background: 'white',
+                                  fontWeight: '600'
+                                }}
+                                className="btn-modal-cancel"
+                              >
+                                ✏️ Edit
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteMeetingClick(m._id || m.id)}
+                                style={{
+                                  fontSize: '11px', 
+                                  color: '#ef4444', 
+                                  border: '1px solid #fee2e2', 
+                                  borderRadius: '6px', 
+                                  padding: '4px 8px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  background: 'rgba(239, 68, 68, 0.05)',
+                                  fontWeight: '600'
+                                }}
+                                className="btn-modal-cancel"
+                              >
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-light)', paddingTop: '12px', marginTop: 'auto' }}>
@@ -557,12 +1008,24 @@ export default function Dashboard({ onNavigate, user }) {
                             👤 Host: {m.host?.name || "Admin"}
                           </span>
                           {!isCompleted ? (
-                            <button 
-                              className="btn-join" 
-                              onClick={() => onNavigate('lobby', m)}
-                            >
-                              Join Session
-                            </button>
+                            m.status === 'ACTIVE' ? (
+                              <button 
+                                className="btn-join" 
+                                onClick={() => onNavigate('lobby', m)}
+                              >
+                                Join Session
+                              </button>
+                            ) : (m.host && (m.host === safeUser.id || m.host._id === safeUser.id || m.host.id === safeUser.id || m.host.email === safeUser.email)) ? (
+                              <button 
+                                className="btn-join" 
+                                style={{ backgroundColor: '#10b981' }}
+                                onClick={() => handleStartMeeting(m)}
+                              >
+                                Start Session
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Scheduled</span>
+                            )
                           ) : (
                             <button 
                               className="btn-join" 
@@ -658,6 +1121,22 @@ export default function Dashboard({ onNavigate, user }) {
                       </div>
                     </div>
 
+                    {/* KEY DISCUSSION POINTS BLOCK */}
+                    {currentSummaryItem.keyDiscussionPoints && currentSummaryItem.keyDiscussionPoints.length > 0 && (
+                      <div style={{ marginBottom: '28px' }}>
+                        <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span>🗣️</span> Key Discussion Points
+                        </h3>
+                        <div className="summary-section-box" style={{ fontSize: '14px', padding: '16px', backgroundColor: 'var(--bg-alt)' }}>
+                          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {currentSummaryItem.keyDiscussionPoints.map((point, pIdx) => (
+                              <li key={pIdx} style={{ color: 'var(--text-main)', lineHeight: '1.4' }}>{point}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
                     {/* ACTION ITEMS BLOCK */}
                     <div style={{ marginBottom: '28px' }}>
                       <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -676,10 +1155,33 @@ export default function Dashboard({ onNavigate, user }) {
                               <label 
                                 htmlFor={`summary-item-${currentSummaryItem._id || currentSummaryItem.id}-${idx}`} 
                                 className={item.completed ? 'completed-text' : ''}
-                                style={{ cursor: 'pointer', marginLeft: '8px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                                style={{ cursor: 'pointer', marginLeft: '8px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}
                               >
                                 <span>{item.text}</span>
-                                {item.assignee && <span style={{ fontSize: '11px', color: 'var(--text-muted)', backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>{item.assignee}</span>}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  {item.assignee && <span style={{ fontSize: '11px', color: 'var(--text-muted)', backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>{item.assignee}</span>}
+                                  <button 
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleConvertToKanban(item, currentSummaryItem._id || currentSummaryItem.id);
+                                    }}
+                                    style={{ 
+                                      fontSize: '11.5px', 
+                                      backgroundColor: 'var(--primary)', 
+                                      color: 'white', 
+                                      border: 'none', 
+                                      borderRadius: '4px', 
+                                      padding: '3px 8px', 
+                                      cursor: 'pointer',
+                                      fontWeight: '600',
+                                      transition: 'all 0.2s'
+                                    }}
+                                    className="btn-convert-action-item"
+                                  >
+                                    📋 Add to Board
+                                  </button>
+                                </div>
                               </label>
                             </div>
                           ))
@@ -728,216 +1230,222 @@ export default function Dashboard({ onNavigate, user }) {
           </div>
         )}
 
-        {/* 4. MASTER TASKS CHECKLIST TAB */}
-        {currentTab === 'tasks' && (
-          <div className="dashboard-content container">
-            <div className="dashboard-welcome">
-              <h1>Master Task Checklist</h1>
-              <p>Orchestrate and toggle all interactive action items extracted from completed meeting summaries.</p>
-            </div>
-
-            <div className="widget-card">
-              <div className="widget-header">
-                <h2>All Actions Found in MongoDB ({filteredTasks.length})</h2>
-                <span className="header-link" onClick={fetchMeetings}>🔄 Refresh</span>
-              </div>
-
-              {loading ? (
-                <div style={{ padding: '40px', textAlign: 'center', opacity: 0.7 }}>Loading master tasks...</div>
-              ) : filteredTasks.length === 0 ? (
-                <div style={{ padding: '40px', textAlign: 'center', opacity: 0.6 }}>
-                  <h3>No tasks resolved in database.</h3>
-                  <p style={{ marginTop: '8px' }}>Tasks will appear here once meetings are completed and summaries are generated.</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {filteredTasks.map((task, index) => {
-                    const key = `${task.meetingId}-${task.itemIndex}-${index}`;
-                    return (
-                      <div 
-                        key={key} 
-                        style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          padding: '14px 18px', 
-                          border: '1px solid var(--border-light)', 
-                          borderRadius: '8px', 
-                          backgroundColor: task.completed ? '#f8fafc' : 'white', 
-                          transition: 'all 0.2s', 
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.02)' 
-                        }}
-                      >
-                        <input 
-                          type="checkbox" 
-                          checked={task.completed} 
-                          onChange={() => handleToggleActionItem(task.meetingId, task.itemIndex)}
-                          id={`task-item-${key}`}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                        />
-                        <div style={{ marginLeft: '16px', flex: 1 }}>
-                          <label 
-                            htmlFor={`task-item-${key}`} 
-                            className={task.completed ? 'completed-text' : ''}
-                            style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-main)', cursor: 'pointer', display: 'block' }}
-                          >
-                            {task.text}
-                          </label>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'inline-block' }}>
-                            🎥 From: <strong>{task.meetingTitle}</strong>
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          {task.assignee && (
-                            <span style={{ fontSize: '11px', color: '#1e3a8a', backgroundColor: '#dbeafe', padding: '3px 8px', borderRadius: '9999px', fontWeight: '600' }}>
-                              Assignee: {task.assignee}
-                            </span>
-                          )}
-                          <span style={{ 
-                            fontSize: '11px', 
-                            color: task.completed ? '#065f46' : '#92400e', 
-                            backgroundColor: task.completed ? '#d1fae5' : '#fef3c7', 
-                            padding: '3px 8px', 
-                            borderRadius: '9999px', 
-                            fontWeight: '600' 
-                          }}>
-                            {task.completed ? 'Completed' : 'Pending'}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
+        {/* 4. TEAM WORKSPACE KANBAN BOARD */}
+        {currentTab === 'workspace' && (
+          <WorkspaceKanban user={safeUser} />
         )}
 
         {/* 5. SETTINGS PREFERENCES TAB */}
         {currentTab === 'settings' && (
           <div className="dashboard-content container">
             <div className="dashboard-welcome">
-              <h1>Enterprise Settings</h1>
+              <h1>System Control Center</h1>
               <p>Configure personal profiles, system connections, and dashboard preferences.</p>
             </div>
 
-            <div className="widgets-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-              {/* Profile Settings Card */}
-              <div className="widget-card">
-                <div className="widget-header">
-                  <h2>👤 Account Details</h2>
+            <div className="settings-layout">
+              <aside className="settings-sidebar">
+                <div className="settings-sidebar-header">
+                  <h3>Preferences</h3>
                 </div>
-                <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px' }}>Admin Username</label>
-                    <input 
-                      type="text" 
-                      defaultValue={safeUser.name} 
-                      readOnly
-                      style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: '#f1f5f9' }} 
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px' }}>Email Address</label>
-                    <input 
-                      type="email" 
-                      defaultValue={safeUser.email} 
-                      readOnly
-                      style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: '#f1f5f9' }} 
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px' }}>Account Authority</label>
-                    <input 
-                      type="text" 
-                      defaultValue={safeUser.role} 
-                      readOnly
-                      style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: '#f1f5f9', color: '#10b981', fontWeight: '800' }} 
-                    />
-                  </div>
-                  <div>
-                    <button 
-                      type="submit" 
-                      className="btn-join" 
-                      style={{ padding: '10px 20px', width: 'max-content' }}
-                    >
-                      Update Profile
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Preferences Settings Card */}
-              <div className="widget-card" style={{ display: 'flex', flexDirection: 'column', justifyBetween: 'space-between' }}>
-                <div>
-                  <div className="widget-header">
-                    <h2>⚙️ Dashboard Preferences</h2>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <strong style={{ fontSize: '14px', color: 'var(--text-main)' }}>Aesthetic Theme</strong>
-                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Enable dark background layouts for the dashboard</p>
-                      </div>
-                      <select 
-                        value={theme} 
-                        onChange={(e) => setTheme(e.target.value)} 
-                        style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                      >
-                        <option value="dark">Vibrant Obsidian (Dark)</option>
-                        <option value="light">Prism Slate (Light)</option>
-                      </select>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <strong style={{ fontSize: '14px', color: 'var(--text-main)' }}>Email Notifications</strong>
-                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Recieve summaries to admin@intellmeet.app</p>
-                      </div>
-                      <input 
-                        type="checkbox" 
-                        checked={emailNotifications} 
-                        onChange={(e) => setEmailNotifications(e.target.checked)} 
-                        style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <strong style={{ fontSize: '14px', color: 'var(--text-main)' }}>Automatic Transcripts Cache</strong>
-                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Cache real-time audio transcripts on meeting exit</p>
-                      </div>
-                      <input 
-                        type="checkbox" 
-                        checked={autoSaveTranscripts} 
-                        onChange={(e) => setAutoSaveTranscripts(e.target.checked)} 
-                        style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '24px' }}>
-                  <h4 style={{ fontSize: '13px', fontWeight: '700', marginBottom: '10px' }}>🌐 Live Backend Integrations Status</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
-                      <span>MongoDB Atlas Cluster: <strong>Connected</strong></span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
-                      <span>Render Gateway API: <strong>Online (100% Connected)</strong></span>
-                    </div>
-                  </div>
-                </div>
-
-                {settingsSuccess && (
-                  <div style={{ marginTop: '16px', padding: '10px', backgroundColor: '#ecfdf5', color: '#10b981', borderRadius: '6px', fontSize: '13px', fontWeight: '700', textAlign: 'center' }}>
-                    ✅ System parameters saved successfully!
+                <nav className="settings-sidebar-nav">
+                  <button 
+                    type="button"
+                    className={`settings-nav-btn ${settingsTab === 'profile' ? 'active' : ''}`}
+                    onClick={() => setSettingsTab('profile')}
+                  >
+                    <span className="nav-icon">👤</span> Profile
+                  </button>
+                  <button 
+                    type="button"
+                    className={`settings-nav-btn ${settingsTab === 'account' ? 'active' : ''}`}
+                    onClick={() => setSettingsTab('account')}
+                  >
+                    <span className="nav-icon">🔑</span> Account
+                  </button>
+                  <button 
+                    type="button"
+                    className={`settings-nav-btn ${settingsTab === 'notifications' ? 'active' : ''}`}
+                    onClick={() => setSettingsTab('notifications')}
+                  >
+                    <span className="nav-icon">🔔</span> Notifications
+                  </button>
+                  <button 
+                    type="button"
+                    className={`settings-nav-btn ${settingsTab === 'appearance' ? 'active' : ''}`}
+                    onClick={() => setSettingsTab('appearance')}
+                  >
+                    <span className="nav-icon">🎨</span> Appearance
+                  </button>
+                  <button 
+                    type="button"
+                    className={`settings-nav-btn ${settingsTab === 'meeting' ? 'active' : ''}`}
+                    onClick={() => setSettingsTab('meeting')}
+                  >
+                    <span className="nav-icon">🎥</span> Meeting Prefs
+                  </button>
+                  <button 
+                    type="button"
+                    className={`settings-nav-btn ${settingsTab === 'ai' ? 'active' : ''}`}
+                    onClick={() => setSettingsTab('ai')}
+                  >
+                    <span className="nav-icon">🧠</span> AI Prefs
+                  </button>
+                  <button 
+                    type="button"
+                    className={`settings-nav-btn ${settingsTab === 'security' ? 'active' : ''}`}
+                    onClick={() => setSettingsTab('security')}
+                  >
+                    <span className="nav-icon">🛡️</span> Security
+                  </button>
+                  <button 
+                    type="button"
+                    className={`settings-nav-btn ${settingsTab === 'workspace' ? 'active' : ''}`}
+                    onClick={() => setSettingsTab('workspace')}
+                  >
+                    <span className="nav-icon">💼</span> Workspace
+                  </button>
+                </nav>
+              </aside>
+              
+              <main className="settings-content-panel">
+                {settingsLoading && (
+                  <div className="settings-loading-overlay">
+                    <div className="spinner"></div>
+                    <span>Processing...</span>
                   </div>
                 )}
-              </div>
+                
+                {/* Profile Tab */}
+                {settingsTab === 'profile' && (
+                  <ProfileSettings
+                    profileAvatar={profileAvatar}
+                    setProfileAvatar={setProfileAvatar}
+                    profileName={profileName}
+                    setProfileName={setProfileName}
+                    profileEmail={profileEmail}
+                    setProfileEmail={setProfileEmail}
+                    profileRole={profileRole}
+                    handleProfileSave={handleProfileSave}
+                  />
+                )}
+
+                {/* Account Tab */}
+                {settingsTab === 'account' && (
+                  <AccountSettings
+                    oldPassword={oldPassword}
+                    setOldPassword={setOldPassword}
+                    newPassword={newPassword}
+                    setNewPassword={setNewPassword}
+                    confirmPassword={confirmPassword}
+                    setConfirmPassword={setConfirmPassword}
+                    handlePasswordChange={handlePasswordChange}
+                    sessions={sessions}
+                    handleLogoutAllOtherDevices={handleLogoutAllOtherDevices}
+                    handleTerminateSession={handleTerminateSession}
+                    handleDeleteAccount={handleDeleteAccount}
+                  />
+                )}
+
+                {/* Notifications Tab */}
+                {settingsTab === 'notifications' && (
+                  <NotificationSettings
+                    emailNotif={emailNotif}
+                    setEmailNotif={setEmailNotif}
+                    meetingReminders={meetingReminders}
+                    setMeetingReminders={setMeetingReminders}
+                    taskReminders={taskReminders}
+                    setTaskReminders={setTaskReminders}
+                    aiSummaryNotif={aiSummaryNotif}
+                    setAiSummaryNotif={setAiSummaryNotif}
+                    handleSaveSettings={handleSaveSettings}
+                  />
+                )}
+
+                {/* Appearance Tab */}
+                {settingsTab === 'appearance' && (
+                  <AppearanceSettings
+                    theme={theme}
+                    setTheme={setTheme}
+                    compactMode={compactMode}
+                    setCompactMode={setCompactMode}
+                    fontSize={fontSize}
+                    setFontSize={setFontSize}
+                    handleSaveSettings={handleSaveSettings}
+                  />
+                )}
+
+                {/* Meeting Preferences Tab */}
+                {settingsTab === 'meeting' && (
+                  <MeetingSettings
+                    joinMicOn={joinMicOn}
+                    setJoinMicOn={setJoinMicOn}
+                    joinCamOn={joinCamOn}
+                    setJoinCamOn={setJoinCamOn}
+                    autoLiveCaptions={autoLiveCaptions}
+                    setAutoLiveCaptions={setAutoLiveCaptions}
+                    defaultDuration={defaultDuration}
+                    setDefaultDuration={setDefaultDuration}
+                    recordingPref={recordingPref}
+                    setRecordingPref={setRecordingPref}
+                    handleSaveSettings={handleSaveSettings}
+                  />
+                )}
+
+                {/* AI Preferences Tab */}
+                {settingsTab === 'ai' && (
+                  <AiSettings
+                    enableAiSummaries={enableAiSummaries}
+                    setEnableAiSummaries={setEnableAiSummaries}
+                    enableActionItems={enableActionItems}
+                    setEnableActionItems={setEnableActionItems}
+                    enableLiveTranscription={enableLiveTranscription}
+                    setEnableLiveTranscription={setEnableLiveTranscription}
+                    aiLanguage={aiLanguage}
+                    setAiLanguage={setAiLanguage}
+                    handleSaveSettings={handleSaveSettings}
+                  />
+                )}
+
+                {/* Security Tab */}
+                {settingsTab === 'security' && (
+                  <SecuritySettings
+                    twoFactorEnabled={twoFactorEnabled}
+                    setTwoFactorEnabled={setTwoFactorEnabled}
+                    twoFactorMethod={twoFactorMethod}
+                    setTwoFactorMethod={setTwoFactorMethod}
+                    shareAnalytics={shareAnalytics}
+                    setShareAnalytics={setShareAnalytics}
+                    publicProfile={publicProfile}
+                    setPublicProfile={setPublicProfile}
+                    handleSaveSettings={handleSaveSettings}
+                  />
+                )}
+
+                {/* Workspace Tab */}
+                {settingsTab === 'workspace' && (
+                  <WorkspaceSettings
+                    defaultWorkspace={defaultWorkspace}
+                    setDefaultWorkspace={setDefaultWorkspace}
+                    allowInvites={allowInvites}
+                    setAllowInvites={setAllowInvites}
+                    restrictDomain={restrictDomain}
+                    setRestrictDomain={setRestrictDomain}
+                    defaultColumn={defaultColumn}
+                    setDefaultColumn={setDefaultColumn}
+                    autoArchiveDone={autoArchiveDone}
+                    setAutoArchiveDone={setAutoArchiveDone}
+                    handleSaveSettings={handleSaveSettings}
+                  />
+                )}
+              </main>
             </div>
           </div>
+        )}
+
+        {/* 6. ANALYTICS DASHBOARD TAB */}
+        {currentTab === 'analytics' && (
+          <AnalyticsDashboard user={safeUser} setCurrentTab={setCurrentTab} />
         )}
       </div>
 
@@ -1045,6 +1553,105 @@ export default function Dashboard({ onNavigate, user }) {
               <button className="btn-modal-logout" onClick={() => { setShowLogoutModal(false); onNavigate('landing'); }}>Logout</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* PROFESSIONAL MEETING SCHEDULER MODAL */}
+      {isScheduleModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '520px', width: '90%' }}>
+            <h3 style={{ fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <span>📅</span> {editingMeetingId ? 'Reschedule Meeting' : 'Schedule a New Meeting'}
+            </h3>
+            
+            {scheduleError && (
+              <div style={{ color: '#ef4444', backgroundColor: '#fef2f2', padding: '10px 14px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px', fontWeight: '500' }}>
+                ❌ {scheduleError}
+              </div>
+            )}
+            
+            {scheduleSuccess && (
+              <div style={{ color: '#10b981', backgroundColor: '#ecfdf5', padding: '10px 14px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px', fontWeight: '500' }}>
+                ✅ {scheduleSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleScheduleSubmit}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: 'var(--text-main)' }}>Meeting Title *</label>
+                <input 
+                  type="text" 
+                  value={scheduleTitle}
+                  onChange={(e) => setScheduleTitle(e.target.value)}
+                  required
+                  placeholder="e.g. Design Sync, Sprint Review"
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '14px' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: 'var(--text-main)' }}>Meeting Date *</label>
+                  <input 
+                    type="date" 
+                    value={scheduleDate}
+                    onChange={(e) => setScheduleDate(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '14px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: 'var(--text-main)' }}>Start Time *</label>
+                  <input 
+                    type="time" 
+                    value={scheduleTime}
+                    onChange={(e) => setScheduleTime(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '14px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: 'var(--text-main)' }}>Duration (minutes) *</label>
+                <input 
+                  type="number" 
+                  value={scheduleDuration}
+                  onChange={(e) => setScheduleDuration(e.target.value)}
+                  required
+                  min="1"
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '14px' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: 'var(--text-main)' }}>Description (optional)</label>
+                <textarea 
+                  value={scheduleDescription}
+                  onChange={(e) => setScheduleDescription(e.target.value)}
+                  placeholder="Provide brief outline or agenda of the meeting session..."
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '14px', minHeight: '80px', resize: 'vertical' }}
+                />
+              </div>
+
+              <div className="modal-buttons">
+                <button type="button" className="btn-modal-cancel" onClick={() => setIsScheduleModalOpen(false)} disabled={isScheduling}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-modal-logout" style={{ backgroundColor: 'var(--primary)', border: 'none' }} disabled={isScheduling}>
+                  {isScheduling ? 'Saving...' : (editingMeetingId ? 'Save Changes' : 'Schedule Call')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Alert */}
+      {toastMessage && (
+        <div className={`settings-toast ${toastType}`}>
+          <span className="toast-icon">{toastType === 'success' ? '✅' : '❌'}</span>
+          <span className="toast-text">{toastMessage}</span>
         </div>
       )}
     </div>

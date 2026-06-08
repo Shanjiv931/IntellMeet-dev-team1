@@ -5,6 +5,9 @@ import env from './config/env.js';
 import logger from './utils/logger.js';
 import authRoutes from './routes/auth.routes.js';
 import meetingRoutes from './routes/meeting.routes.js';
+import taskRoutes from './routes/task.routes.js';
+import userRoutes from './routes/user.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
 import errorMiddleware from './middleware/error.middleware.js';
 import AppError from './utils/AppError.js';
 import { apiRateLimiter } from './middleware/rateLimit.middleware.js';
@@ -70,6 +73,15 @@ app.use('/api/auth', authRoutes);
 
 // Register Core Meeting CRUD Routes
 app.use('/api/meetings', meetingRoutes);
+
+// Register Core Kanban Task Routes
+app.use('/api/tasks', taskRoutes);
+
+// Register Core User & Settings Routes
+app.use('/api/users', userRoutes);
+
+// Register Core Analytics Routes
+app.use('/api/analytics', analyticsRoutes);
 
 // Fallback Route Handler for undefined endpoints
 app.all('*', (req, res, next) => {
