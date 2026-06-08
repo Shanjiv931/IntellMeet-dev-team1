@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>IntelliMeet Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#ffffff;--bg2:#f8f9fa;--bg3:#f1f3f4;--bg4:#e8eaed;
+--border:#dadce0;--border2:#bdc1c6;
+--text:#202124;--text2:#5f6368;--text3:#9aa0a6;
+--blue:#1a73e8;--blue-light:#e8f0fe;--blue-dark:#1557b0;
+--yellow:#fbbc04;--yellow-light:#fef9e7;--yellow-dark:#f29900;
+--green:#34a853;--green-light:#e6f4ea;
+--red:#ea4335;--red-light:#fce8e6;
+--radius:8px;--radius2:12px;--radius3:24px;
+font-family:'Google Sans',sans-serif;color:var(--text);background:var(--bg);
+}
+body{min-height:100vh;overflow-x:hidden}
+.page{display:none;min-height:100vh}
+.page.active{display:flex;flex-direction:column}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeUp .3s ease}
+
+.btn{border:none;cursor:pointer;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;border-radius:var(--radius3);padding:9px 24px;transition:all .15s;outline:none}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-outline{background:transparent;color:var(--blue);border:1px solid var(--border2)}
+.btn-outline:hover{background:var(--blue-light);border-color:var(--blue)}
+.btn-text{background:transparent;color:var(--blue);padding:9px 12px}
+.btn-text:hover{background:var(--blue-light)}
+.btn-yellow{background:var(--yellow);color:#202124}
+.btn-yellow:hover{background:var(--yellow-dark)}
+.btn-sm{padding:6px 16px;font-size:13px}
+.btn-danger{background:transparent;color:var(--red);border:1px solid #dadce0}
+.btn-danger:hover{background:var(--red-light)}
+
+.input-wrap{margin-bottom:16px}
+.input-wrap label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;letter-spacing:.01em}
+.input-wrap input,.input-wrap select{width:100%;background:#fff;border:1px solid var(--border2);border-radius:var(--radius);padding:9px 12px 9px 36px;color:var(--text);font-family:'Google Sans',sans-serif;font-size:14px;outline:none;transition:border .15s}
+.input-wrap input:focus,.input-wrap select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.12)}
+.input-wrap .ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:17px;pointer-events:none}
+.input-wrap .field{position:relative}
+.no-icon input,.no-icon select{padding-left:12px}
+.input-wrap select{padding-left:12px;appearance:none;cursor:pointer}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:12px 32px;border-bottom:1px solid var(--border);background:#fff}
+.logo{display:flex;align-items:center;gap:8px;cursor:pointer}
+.logo-mark{width:32px;height:32px;background:var(--yellow);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-name{font-family:'Google Sans Display',sans-serif;font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.logo-name span{color:var(--blue)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+
+.hero{padding:80px 40px 64px;max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:64px}
+.hero-left{flex:1;min-width:0}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;background:var(--yellow-light);border:1px solid #fde68a;border-radius:100px;padding:5px 14px;font-size:12px;font-weight:500;color:#92400e;margin-bottom:20px}
+.hero h1{font-family:'Google Sans Display',sans-serif;font-size:clamp(32px,4vw,52px);font-weight:700;line-height:1.15;letter-spacing:-.02em;color:var(--text);margin-bottom:16px}
+.hero h1 em{font-style:normal;color:var(--blue)}
+.hero p{font-size:16px;color:var(--text2);line-height:1.7;margin-bottom:28px;max-width:460px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.hero-right{flex:1;min-width:0}
+.mockup-frame{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);overflow:hidden}
+.mockup-bar{background:#fff;border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%}
+.mockup-url{font-size:11px;color:var(--text3);font-family:monospace;margin-left:8px}
+.mockup-frame img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;filter:brightness(.95)}
+
+.section{padding:64px 40px;max-width:1080px;margin:0 auto}
+.section-hd{margin-bottom:40px}
+.section-hd h2{font-family:'Google Sans Display',sans-serif;font-size:clamp(22px,2.5vw,32px);font-weight:700;margin-bottom:8px}
+.section-hd p{color:var(--text2);font-size:15px}
+.section-divider{border:none;border-top:1px solid var(--border);margin:0}
+
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.feat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius2);padding:22px;transition:border-color .15s}
+.feat-card:hover{border-color:var(--blue)}
+.feat-icon{width:40px;height:40px;border-radius:var(--radius);background:var(--blue-light);display:flex;align-items:center;justify-content:center;margin-bottom:14px;color:var(--blue);font-size:20px}
+.feat-card h3{font-size:15px;font-weight:600;margin-bottom:6px}
+.feat-card p{font-size:13px;color:var(--text2);line-height:1.6}
+
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:640px}
+.pricing-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius2);padding:28px;position:relative}
+.pricing-card.featured{border:2px solid var(--yellow);background:var(--yellow-light)}
+.popular-tag{display:inline-block;background:var(--yellow);color:#202124;font-size:11px;font-weight:700;padding:3px 12px;border-radius:100px;margin-bottom:12px;letter-spacing:.03em}
+.price-num{font-family:'Google Sans Display',sans-serif;font-size:36px;font-weight:700;line-height:1;margin:8px 0 4px}
+.price-sub{font-size:12px;color:var(--text2);margin-bottom:16px}
+.feat-list{margin-top:16px;display:flex;flex-direction:column;gap:8px;list-style:none}
+.feat-list li{font-size:13px;color:var(--text2);display:flex;align-items:flex-start;gap:8px}
+.feat-list li i{color:var(--green);font-size:16px;flex-shrink:0;margin-top:1px}
+
+.cta-strip{background:var(--blue);padding:56px 40px;text-align:center}
+.cta-strip h2{font-family:'Google Sans Display',sans-serif;font-size:28px;font-weight:700;color:#fff;margin-bottom:12px}
+.cta-strip p{color:rgba(255,255,255,.8);font-size:15px;margin-bottom:28px}
+
+footer{border-top:1px solid var(--border);padding:20px 40px;text-align:center;font-size:12px;color:var(--text3)}
+
+.auth-wrap{min-height:100vh;background:var(--bg2);display:flex;align-items:center;justify-content:center;padding:24px}
+.auth-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius2);padding:36px;width:100%;max-width:380px}
+.auth-logo{display:flex;flex-direction:column;align-items:center;margin-bottom:24px}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
+.auth-tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s}
+.auth-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.err{background:var(--red-light);border:1px solid #f5c6c2;color:#c5221f;font-size:12px;padding:10px 12px;border-radius:var(--radius);margin-bottom:14px}
+.ok{background:var(--green-light);border:1px solid #ceead6;color:#188038;font-size:12px;padding:10px 12px;border-radius:var(--radius);margin-bottom:14px}
+.demo-row{display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.demo-chip{flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--text2);border-radius:var(--radius);padding:7px;font-size:11px;cursor:pointer;font-family:'Google Sans',sans-serif;text-align:center;transition:all .15s}
+.demo-chip:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.back-link{display:block;text-align:center;margin-top:16px;font-size:12px;color:var(--text3);cursor:pointer;transition:color .15s}
+.back-link:hover{color:var(--blue)}
+
+.dash-layout{display:flex;min-height:100vh;background:var(--bg)}
+.sidebar{width:200px;background:#fff;border-right:1px solid var(--border);padding:16px 8px;display:flex;flex-direction:column;flex-shrink:0}
+.sidebar .logo{padding:4px 8px 16px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius3);cursor:pointer;font-size:14px;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--bg2)}
+.nav-item.active{background:var(--blue-light);color:var(--blue);font-weight:500}
+.nav-item i{font-size:18px}
+.sidebar-footer{margin-top:auto;padding:8px}
+.user-chip{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
+.user-chip .uname{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-chip .uemail{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.dash-main{flex:1;padding:28px 32px;overflow-y:auto;min-width:0}
+.dash-hd h1{font-family:'Google Sans Display',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px}
+.dash-hd p{font-size:14px;color:var(--text2);margin-bottom:24px}
+.stat-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:24px}
+.stat-box{background:#fff;border:1px solid var(--border);border-radius:var(--radius2);padding:16px}
+.stat-box .slabel{font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.stat-box .sval{font-family:'Google Sans Display',sans-serif;font-size:26px;font-weight:700}
+.qa-row{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.dash-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius2);padding:20px;margin-bottom:16px}
+.dash-card-hd{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.meet-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.meet-row:last-child{border-bottom:none}
+.meet-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.meet-info{flex:1;margin-left:12px;min-width:0}
+.meet-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meet-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:100px;white-space:nowrap}
+.badge-active{background:var(--green-light);color:#188038}
+.badge-scheduled{background:var(--blue-light);color:var(--blue)}
+.badge-ended{background:var(--bg3);color:var(--text3)}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.err2{background:var(--red-light);border:1px solid #f5c6c2;color:#c5221f;font-size:12px;padding:9px 12px;border-radius:var(--radius);margin-bottom:12px;display:none}
+.ok2{background:var(--green-light);border:1px solid #ceead6;color:#188038;font-size:12px;padding:9px 12px;border-radius:var(--radius);margin-bottom:12px;display:none}
+
+.room-wrap{display:flex;flex-direction:column;min-height:100vh;background:#1a1a1a}
+.room-top{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:#202124;border-bottom:1px solid #3c4043}
+.room-mid{display:flex;flex:1;min-height:0}
+.video-area{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;padding:16px}
+.vtile{background:#2d2e30;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;aspect-ratio:16/9}
+.vtile.main{grid-column:1;grid-row:1/3}
+.vavatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;font-family:'Google Sans Display',sans-serif}
+.vname{position:absolute;bottom:8px;left:10px;font-size:11px;font-weight:500;color:#fff;background:rgba(0,0,0,.5);padding:2px 8px;border-radius:4px}
+.room-panel{width:280px;background:#202124;border-left:1px solid #3c4043;display:flex;flex-direction:column}
+.panel-tabs{display:flex;border-bottom:1px solid #3c4043}
+.ptab{flex:1;padding:11px 8px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;color:#9aa0a6;border-bottom:2px solid transparent;transition:all .15s}
+.ptab.active{color:#8ab4f8;border-bottom-color:#8ab4f8}
+.panel-body{flex:1;padding:14px;overflow-y:auto;font-size:13px;color:#9aa0a6}
+.cmsg{background:#2d2e30;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.cmsg .csender{font-size:11px;font-weight:600;color:#8ab4f8;margin-bottom:3px}
+.cmsg .ctext{font-size:13px;color:#e8eaed;line-height:1.5}
+.ci-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #3c4043}
+.ci-input{flex:1;background:#2d2e30;border:1px solid #5f6368;border-radius:20px;padding:7px 14px;color:#e8eaed;font-size:13px;outline:none;font-family:'Google Sans',sans-serif}
+.ci-input:focus{border-color:#8ab4f8}
+.ci-btn{background:#8ab4f8;color:#202124;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Google Sans',sans-serif;transition:background .15s}
+.ci-btn:hover{background:#aecbfa}
+.room-bot{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;background:#202124;border-top:1px solid #3c4043}
+.cbtn{width:46px;height:46px;border-radius:50%;background:#3c4043;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#e8eaed;font-size:18px;transition:all .15s}
+.cbtn:hover{background:#4a4e52}
+.cbtn.on{background:#8ab4f8;color:#202124}
+.cbtn.end{background:#ea4335;color:#fff}
+.cbtn.end:hover{background:#c5221f}
+.ai-block{background:#2d2e30;border:1px solid #5f6368;border-radius:10px;padding:12px;margin-bottom:10px}
+.ai-lbl{font-size:10px;font-weight:700;color:#fdd663;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.ai-block p{font-size:12px;color:#bdc1c6;line-height:1.6}
+.live-pill{display:inline-flex;align-items:center;gap:5px;background:#188038;color:#fff;font-size:11px;font-weight:600;padding:3px 12px;border-radius:100px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse .9s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.room-timer{font-size:13px;color:#9aa0a6;font-family:monospace}
+.room-id-badge{font-size:11px;color:#9aa0a6;background:#2d2e30;padding:4px 10px;border-radius:6px;font-family:monospace}
+.ppl-row{display:flex;align-items:center;gap:10px;padding:8px;background:#2d2e30;border-radius:8px;margin-bottom:8px}
+.ppl-name{font-size:13px;color:#e8eaed;font-weight:500}
+.ppl-role{font-size:11px;color:#9aa0a6}
+.sum-btn{width:100%;margin-top:10px;background:#2d2e30;border:1px solid #5f6368;color:#8ab4f8;border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Google Sans',sans-serif;transition:all .15s}
+.sum-btn:hover{background:#3c4043}
+</style>
+</head>
+<body>
+
+<div id="page-landing" class="page active anim">
+  <nav>
+    <div class="logo">
+      <div class="logo-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#202124" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.259a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg></div>
+      <span class="logo-name">Intelli<span>Meet</span> Pro</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-text" onclick="showAuth('login')">Sign in</button>
+      <button class="btn btn-primary" onclick="showAuth('register')">Get started</button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow"><i class="ti ti-sparkles" aria-hidden="true"></i> AI-powered meetings</div>
+      <h1>Video meetings that<br><em>think with you</em></h1>
+      <p>Real-time AI summaries, collaborative whiteboards, smart scheduling, and deep analytics — all in one place.</p>
+      <div class="hero-btns">
+        <button class="btn btn-primary" onclick="showAuth('register')">Start for free</button>
+        <button class="btn btn-outline" onclick="showAuth('login')">Sign in</button>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="mockup-frame">
+        <div class="mockup-bar">
+          <span class="dot" style="background:#ea4335"></span>
+          <span class="dot" style="background:#fbbc04"></span>
+          <span class="dot" style="background:#34a853"></span>
+          <span class="mockup-url">intellimeet.pro/room/live_demo</span>
+        </div>
+        <img src="https://images.unsplash.com/photo-1531538606174-0f90ff5dce83?w=900&auto=format&fit=crop&q=80" alt="Platform preview" referrerpolicy="no-referrer"/>
+      </div>
+    </div>
+  </div>
+
+  <hr class="section-divider"/>
+
+  <div class="section">
+    <div class="section-hd"><h2>Everything your team needs</h2><p>Stop switching tabs. IntelliMeet Pro keeps all your collaboration tools in one unified workspace.</p></div>
+    <div class="feat-grid">
+      <div class="feat-card"><div class="feat-icon"><i class="ti ti-robot" aria-hidden="true"></i></div><h3>AI Meeting Copilot</h3><p>Ask questions mid-meeting, surface action items, and get real-time summaries powered by Gemini AI.</p></div>
+      <div class="feat-card"><div class="feat-icon"><i class="ti ti-brush" aria-hidden="true"></i></div><h3>Live Whiteboard</h3><p>Collaborate on a shared canvas with vector shapes and freehand drawing, synced in real time.</p></div>
+      <div class="feat-card"><div class="feat-icon"><i class="ti ti-file-text" aria-hidden="true"></i></div><h3>Auto Minutes</h3><p>Automatically generate structured MOM documents with action items when a meeting ends.</p></div>
+      <div class="feat-card"><div class="feat-icon"><i class="ti ti-layout-distribute-vertical" aria-hidden="true"></i></div><h3>Breakout Rooms</h3><p>Launch and manage breakout sessions in real time with full host control.</p></div>
+      <div class="feat-card"><div class="feat-icon"><i class="ti ti-calendar" aria-hidden="true"></i></div><h3>Smart Scheduler</h3><p>Plan meetings, assign participants, and send calendar reminders from the dashboard.</p></div>
+      <div class="feat-card"><div class="feat-icon"><i class="ti ti-chart-bar" aria-hidden="true"></i></div><h3>Analytics Dashboard</h3><p>Track attendance, engagement, poll results, and action item completion in one view.</p></div>
+    </div>
+  </div>
+
+  <hr class="section-divider"/>
+
+  <div class="section">
+    <div class="section-hd"><h2>Simple, transparent pricing</h2><p>Start free, scale when you're ready.</p></div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Starter</div>
+        <div class="price-num">&#8377;0</div>
+        <div class="price-sub">Free forever</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px">For individuals and small teams exploring collaborative workflows.</p>
+        <button class="btn btn-outline" style="width:100%" onclick="showAuth('register')">Get started</button>
+        <ul class="feat-list">
+          <li><i class="ti ti-check" aria-hidden="true"></i>45-minute meeting sessions</li>
+          <li><i class="ti ti-check" aria-hidden="true"></i>Real-time collaborative whiteboard</li>
+          <li><i class="ti ti-check" aria-hidden="true"></i>Live polls and attendance logs</li>
+          <li><i class="ti ti-check" aria-hidden="true"></i>Local file sharing</li>
+        </ul>
+      </div>
+      <div class="pricing-card featured">
+        <div class="popular-tag">Most popular</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Enterprise Pro</div>
+        <div class="price-num">&#8377;2,499</div>
+        <div class="price-sub">per host / month</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px">For teams that need unlimited AI-powered meetings with full analytics.</p>
+        <button class="btn btn-yellow" style="width:100%" onclick="showAuth('register')">Upgrade to Pro</button>
+        <ul class="feat-list">
+          <li><i class="ti ti-check" aria-hidden="true"></i>Unlimited meeting duration</li>
+          <li><i class="ti ti-check" aria-hidden="true"></i>Gemini AI assistant and auto-summaries</li>
+          <li><i class="ti ti-check" aria-hidden="true"></i>Automated MOM generation</li>
+          <li><i class="ti ti-check" aria-hidden="true"></i>Host-directed breakout rooms</li>
+          <li><i class="ti ti-check" aria-hidden="true"></i>Cloud recording storage</li>
+          <li><i class="ti ti-check" aria-hidden="true"></i>24/7 priority support</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-strip">
+    <h2>Ready to transform how your team meets?</h2>
+    <p>Join teams already using IntelliMeet Pro to run smarter, faster meetings.</p>
+    <button class="btn btn-yellow btn-sm" style="font-size:14px;padding:11px 28px" onclick="showAuth('register')">Start for free</button>
+  </div>
+
+  <footer>&copy; 2026 IntelliMeet Pro. All rights reserved.</footer>
+</div>
+
+<div id="page-auth" class="page" style="background:var(--bg2)">
+  <nav>
+    <div class="logo" onclick="showPage('landing')">
+      <div class="logo-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#202124" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.259a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg></div>
+      <span class="logo-name">Intelli<span>Meet</span> Pro</span>
+    </div>
+  </nav>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-mark" style="width:40px;height:40px;margin-bottom:12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#202124" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.259a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg></div>
+        <div style="font-size:18px;font-weight:700;font-family:'Google Sans Display',sans-serif" id="auth-title">Sign in</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px">to continue to IntelliMeet Pro</div>
+      </div>
+      <div id="msg-err" class="err" style="display:none"></div>
+      <div id="msg-ok" class="ok" style="display:none"></div>
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign in</div>
+        <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Create account</div>
+      </div>
+      <div id="form-login">
+        <div class="input-wrap"><label>Email address</label><div class="field"><i class="ti ti-mail ico" aria-hidden="true"></i><input type="email" id="l-email" placeholder="you@example.com"/></div></div>
+        <div class="input-wrap"><label>Password</label><div class="field"><i class="ti ti-lock ico" aria-hidden="true"></i><input type="password" id="l-pass" placeholder="Your password"/></div></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doLogin()">Sign in</button>
+        <div class="demo-row">
+          <div class="demo-chip" onclick="fillDemo('sushant@example.com','password123')">Sushant (Host)</div>
+          <div class="demo-chip" onclick="fillDemo('mayuresh@example.com','password123')">Mayuresh (Lead)</div>
+        </div>
+      </div>
+      <div id="form-register" style="display:none">
+        <div class="input-wrap"><label>Full name</label><div class="field no-icon"><input type="text" id="r-name" placeholder="Your full name" style="padding-left:12px"/></div></div>
+        <div class="input-wrap"><label>Email address</label><div class="field"><i class="ti ti-mail ico" aria-hidden="true"></i><input type="email" id="r-email" placeholder="you@example.com"/></div></div>
+        <div class="input-wrap"><label>Password</label><div class="field"><i class="ti ti-lock ico" aria-hidden="true"></i><input type="password" id="r-pass" placeholder="Create a password"/></div></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doRegister()">Create account</button>
+      </div>
+      <span class="back-link" onclick="showPage('landing')"><i class="ti ti-arrow-left" style="font-size:12px" aria-hidden="true"></i> Back to home</span>
+    </div>
+  </div>
+</div>
+
+<div id="page-dashboard" class="page" style="flex-direction:row">
+  <aside class="sidebar">
+    <div class="logo" onclick="showPage('landing')" style="padding:4px 8px 16px">
+      <div class="logo-mark" style="width:28px;height:28px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#202124" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.259a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg></div>
+      <span class="logo-name" style="font-size:14px">IntelliMeet</span>
+    </div>
+    <div class="nav-item active" id="nav-overview" onclick="setTab('overview')"><i class="ti ti-home" aria-hidden="true"></i>Overview</div>
+    <div class="nav-item" id="nav-meetings" onclick="setTab('meetings')"><i class="ti ti-list" aria-hidden="true"></i>Meetings</div>
+    <div class="nav-item" id="nav-schedule" onclick="setTab('schedule')"><i class="ti ti-calendar-plus" aria-hidden="true"></i>Schedule</div>
+    <div class="nav-item" id="nav-join" onclick="setTab('join')"><i class="ti ti-link" aria-hidden="true"></i>Join</div>
+    <div class="sidebar-footer">
+      <div class="user-chip" style="margin-bottom:8px">
+        <div class="uname" id="sbar-name">User</div>
+        <div class="uemail" id="sbar-email">user@example.com</div>
+      </div>
+      <button class="btn btn-danger btn-sm" style="width:100%;border-radius:var(--radius)" onclick="doLogout()">Sign out</button>
+    </div>
+  </aside>
+  <main class="dash-main">
+    <div id="dt-overview" class="dash-tab">
+      <div class="dash-hd"><h1 id="greeting">Good morning</h1><p>Here is what is happening with your meetings today.</p></div>
+      <div class="stat-row">
+        <div class="stat-box"><div class="slabel">Total</div><div class="sval" id="s-total">4</div></div>
+        <div class="stat-box"><div class="slabel">Active now</div><div class="sval" style="color:var(--green)" id="s-active">1</div></div>
+        <div class="stat-box"><div class="slabel">Scheduled</div><div class="sval" style="color:var(--blue)" id="s-sched">2</div></div>
+        <div class="stat-box"><div class="slabel">Total hours</div><div class="sval" id="s-hrs">3.5</div></div>
+      </div>
+      <div class="qa-row">
+        <button class="btn btn-primary" onclick="startInstant()"><i class="ti ti-plus" aria-hidden="true" style="font-size:15px;margin-right:4px"></i>New meeting</button>
+        <button class="btn btn-outline" onclick="setTab('join')">Join by ID</button>
+        <button class="btn btn-outline" onclick="setTab('schedule')">Schedule</button>
+      </div>
+      <div class="dash-card"><div class="dash-card-hd"><i class="ti ti-list" aria-hidden="true"></i>Recent meetings</div><div id="list-overview"></div></div>
+    </div>
+    <div id="dt-meetings" class="dash-tab" style="display:none">
+      <div class="dash-hd"><h1>All meetings</h1><p>View and manage your meeting history.</p></div>
+      <div class="dash-card"><div class="dash-card-hd"><i class="ti ti-list" aria-hidden="true"></i>All meetings</div><div id="list-all"></div></div>
+    </div>
+    <div id="dt-schedule" class="dash-tab" style="display:none">
+      <div class="dash-hd"><h1>Schedule a meeting</h1><p>Set up a meeting in advance and invite your team.</p></div>
+      <div class="dash-card" style="max-width:520px">
+        <div class="dash-card-hd"><i class="ti ti-calendar-plus" aria-hidden="true"></i>New meeting</div>
+        <div class="err2" id="sch-err"></div>
+        <div class="ok2" id="sch-ok"></div>
+        <div class="input-wrap"><label>Meeting title</label><input type="text" id="sch-title" placeholder="e.g. Product standup" style="width:100%;padding:9px 12px;background:#fff;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Google Sans',sans-serif;font-size:14px;outline:none"/></div>
+        <div class="input-wrap"><label>Description (optional)</label><input type="text" id="sch-desc" placeholder="Agenda or details" style="width:100%;padding:9px 12px;background:#fff;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Google Sans',sans-serif;font-size:14px;outline:none"/></div>
+        <div class="form-grid-3" style="margin-bottom:16px">
+          <div><label style="font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px;display:block">Date</label><input type="date" id="sch-date" style="width:100%;padding:9px 12px;background:#fff;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Google Sans',sans-serif;font-size:13px;outline:none"/></div>
+          <div><label style="font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px;display:block">Time</label><input type="time" id="sch-time" style="width:100%;padding:9px 12px;background:#fff;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Google Sans',sans-serif;font-size:13px;outline:none"/></div>
+          <div><label style="font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px;display:block">Duration</label><select id="sch-dur" style="width:100%;padding:9px 12px;background:#fff;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Google Sans',sans-serif;font-size:13px;outline:none;appearance:none"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 hour</option><option value="90">1.5 hrs</option></select></div>
+        </div>
+        <button class="btn btn-primary" onclick="doSchedule()">Schedule meeting</button>
+      </div>
+    </div>
+    <div id="dt-join" class="dash-tab" style="display:none">
+      <div class="dash-hd"><h1>Join a meeting</h1><p>Enter a meeting ID to join an active session.</p></div>
+      <div class="dash-card" style="max-width:400px">
+        <div class="dash-card-hd"><i class="ti ti-link" aria-hidden="true"></i>Enter meeting details</div>
+        <div class="input-wrap"><label>Meeting ID</label><input type="text" id="j-id" placeholder="e.g. room_abc123" style="width:100%;padding:9px 12px;background:#fff;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Google Sans',sans-serif;font-size:14px;outline:none"/></div>
+        <div class="input-wrap"><label>Passcode (optional)</label><input type="text" id="j-pass" placeholder="Enter passcode" style="width:100%;padding:9px 12px;background:#fff;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Google Sans',sans-serif;font-size:14px;outline:none"/></div>
+        <button class="btn btn-primary" onclick="doJoin()"><i class="ti ti-arrow-right" aria-hidden="true" style="font-size:15px;margin-right:4px"></i>Join meeting</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="page-meeting" class="page" style="flex-direction:column">
+  <div class="room-wrap">
+    <div class="room-top">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="logo-mark" style="width:28px;height:28px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#202124" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.259a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg></div>
+        <span style="font-size:14px;font-weight:600;color:#e8eaed;font-family:'Google Sans',sans-serif">IntelliMeet Pro</span>
+        <div class="room-id-badge" id="room-id-show">room_demo</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="live-pill"><div class="live-dot"></div>Live</div>
+        <span class="room-timer" id="room-timer">00:00</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="leaveRoom()" style="background:#ea4335;color:#fff;border:none;border-radius:20px">Leave call</button>
+    </div>
+    <div class="room-mid">
+      <div class="video-area">
+        <div class="vtile main" id="tile-me">
+          <div class="vavatar" id="room-avatar" style="background:var(--blue)">U</div>
+          <div class="vname" id="room-vname">You</div>
+        </div>
+        <div class="vtile"><div class="vavatar" style="background:#0f9d58">SK</div><div class="vname">Sushant K.</div></div>
+        <div class="vtile"><div class="vavatar" style="background:#9334e9">PR</div><div class="vname">Priya R.</div></div>
+        <div class="vtile"><div class="vavatar" style="background:#e8710a">AM</div><div class="vname">Ankit M.</div></div>
+      </div>
+      <div class="room-panel">
+        <div class="panel-tabs">
+          <div class="ptab active" id="ptab-chat" onclick="setPTab('chat')">Chat</div>
+          <div class="ptab" id="ptab-ai" onclick="setPTab('ai')">AI Copilot</div>
+          <div class="ptab" id="ptab-people" onclick="setPTab('people')">People</div>
+        </div>
+        <div class="panel-body" id="pb-chat">
+          <div id="chat-msgs">
+            <div class="cmsg"><div class="csender">Sushant K.</div><div class="ctext">Let us start with the sprint review first.</div></div>
+            <div class="cmsg"><div class="csender">Priya R.</div><div class="ctext">Agreed, I have the demo slides ready.</div></div>
+            <div class="cmsg"><div class="csender">Ankit M.</div><div class="ctext">Backend API changes are ready for review too.</div></div>
+          </div>
+        </div>
+        <div class="panel-body" id="pb-ai" style="display:none">
+          <div class="ai-block"><div class="ai-lbl">AI Copilot — active</div><p>Meeting in progress. I am listening and will generate a summary at the end of this session.</p></div>
+          <div class="ai-block"><div class="ai-lbl">Key points so far</div><p>Sprint review in progress<br>Demo slides ready — Priya<br>Backend API changes ready — Ankit</p></div>
+          <button class="sum-btn" id="sum-btn" onclick="genSummary()">Generate summary now</button>
+        </div>
+        <div class="panel-body" id="pb-people" style="display:none">
+          <div class="ppl-row"><div class="vavatar" id="ppl-avatar" style="background:var(--blue);width:34px;height:34px;font-size:13px">U</div><div><div class="ppl-name" id="ppl-name">You</div><div class="ppl-role" style="color:#fdd663">Host</div></div></div>
+          <div class="ppl-row"><div class="vavatar" style="background:#0f9d58;width:34px;height:34px;font-size:13px">SK</div><div><div class="ppl-name">Sushant K.</div><div class="ppl-role">Participant</div></div></div>
+          <div class="ppl-row"><div class="vavatar" style="background:#9334e9;width:34px;height:34px;font-size:13px">PR</div><div><div class="ppl-name">Priya R.</div><div class="ppl-role">Participant</div></div></div>
+          <div class="ppl-row"><div class="vavatar" style="background:#e8710a;width:34px;height:34px;font-size:13px">AM</div><div><div class="ppl-name">Ankit M.</div><div class="ppl-role">Participant</div></div></div>
+        </div>
+        <div class="ci-row">
+          <input class="ci-input" id="ci-msg" placeholder="Send a message" onkeydown="if(event.key==='Enter')sendMsg()"/>
+          <button class="ci-btn" onclick="sendMsg()">Send</button>
+        </div>
+      </div>
+    </div>
+    <div class="room-bot">
+      <button class="cbtn on" id="c-mic" onclick="tgl('mic')" aria-label="Toggle microphone"><i class="ti ti-microphone" aria-hidden="true"></i></button>
+      <button class="cbtn on" id="c-cam" onclick="tgl('cam')" aria-label="Toggle camera"><i class="ti ti-video" aria-hidden="true"></i></button>
+      <button class="cbtn" id="c-screen" onclick="tgl('screen')" aria-label="Share screen"><i class="ti ti-screen-share" aria-hidden="true"></i></button>
+      <button class="cbtn" id="c-hand" onclick="tgl('hand')" aria-label="Raise hand"><i class="ti ti-hand-stop" aria-hidden="true"></i></button>
+      <button class="cbtn" id="c-poll" onclick="tgl('poll')" aria-label="Live poll"><i class="ti ti-chart-bar" aria-hidden="true"></i></button>
+      <button class="cbtn end" onclick="leaveRoom()" aria-label="Leave call"><i class="ti ti-phone-off" aria-hidden="true"></i></button>
+    </div>
+  </div>
+</div>
+
+<script>
+let user=null,timer=null,secs=0;
+const ctrl={mic:true,cam:true,screen:false,hand:false,poll:false};
+const meets=[
+  {id:'room_sprint_q2',title:'Q2 Sprint Review',status:'active',date:'Today, 2:00 PM',dur:45},
+  {id:'room_design_qa',title:'Design QA Sync',status:'scheduled',date:'Today, 5:30 PM',dur:30},
+  {id:'room_onboard_3',title:'Onboarding — Batch 3',status:'scheduled',date:'Tomorrow, 10:00 AM',dur:60},
+  {id:'room_retro_may',title:'May Retrospective',status:'ended',date:'Yesterday, 3:00 PM',dur:90},
+];
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.display='none';});
+  const el=document.getElementById('page-'+id);
+  if(!el)return;
+  el.style.display='flex';el.classList.add('active');
+  if(timer&&id!=='meeting'){clearInterval(timer);timer=null;}
+}
+function showAuth(mode){showPage('auth');switchTab(mode);}
+function switchTab(t){
+  ['login','register'].forEach(k=>{
+    document.getElementById('tab-'+k).classList.toggle('active',k===t);
+    document.getElementById('form-'+k).style.display=k===t?'block':'none';
+  });
+  document.getElementById('auth-title').textContent=t==='login'?'Sign in':'Create account';
+  clrMsg();
+}
+function clrMsg(){['msg-err','msg-ok'].forEach(id=>{document.getElementById(id).style.display='none';});}
+function showErr(m){const e=document.getElementById('msg-err');e.textContent=m;e.style.display='block';document.getElementById('msg-ok').style.display='none';}
+function showOk(m){const e=document.getElementById('msg-ok');e.textContent=m;e.style.display='block';document.getElementById('msg-err').style.display='none';}
+function fillDemo(e,p){document.getElementById('l-email').value=e;document.getElementById('l-pass').value=p;}
+function doLogin(){
+  const e=document.getElementById('l-email').value.trim();
+  const p=document.getElementById('l-pass').value.trim();
+  if(!e||!p){showErr('Please enter your email and password.');return;}
+  const demo={'sushant@example.com':{name:'Sushant Kumar',email:'sushant@example.com'},'mayuresh@example.com':{name:'Mayuresh Patil',email:'mayuresh@example.com'}};
+  if(!demo[e]){showErr('No account found with that email.');return;}
+  if(p!=='password123'){showErr('Incorrect password. Please try again.');return;}
+  user=demo[e];loadDash(user);
+}
+function doRegister(){
+  const n=document.getElementById('r-name').value.trim();
+  const e=document.getElementById('r-email').value.trim();
+  const p=document.getElementById('r-pass').value.trim();
+  if(!n||!e||!p){showErr('All fields are required.');return;}
+  if(p.length<6){showErr('Password must be at least 6 characters.');return;}
+  user={name:n,email:e};showOk('Account created! Redirecting...');
+  setTimeout(()=>loadDash(user),1000);
+}
+function loadDash(u){
+  document.getElementById('sbar-name').textContent=u.name;
+  document.getElementById('sbar-email').textContent=u.email;
+  const h=new Date().getHours();
+  const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('greeting').textContent=g+', '+u.name.split(' ')[0];
+  renderList();showPage('dashboard');setTab('overview');
+}
+function renderList(){
+  const html=meets.map(m=>`
+    <div class="meet-row">
+      <span class="meet-dot" style="background:${m.status==='active'?'#34a853':m.status==='scheduled'?'#1a73e8':'#9aa0a6'}"></span>
+      <div class="meet-info"><div class="meet-title">${m.title}</div><div class="meet-meta">${m.date} &middot; ${m.dur} min</div></div>
+      <span class="badge badge-${m.status}">${m.status}</span>
+      ${m.status!=='ended'?`<button class="btn btn-primary btn-sm" style="margin-left:10px" onclick="joinRoom('${m.id}')">Join</button>`:'<div style="width:60px"></div>'}
+    </div>`).join('');
+  document.getElementById('list-overview').innerHTML=html;
+  document.getElementById('list-all').innerHTML=html;
+  document.getElementById('s-total').textContent=meets.length;
+  document.getElementById('s-active').textContent=meets.filter(m=>m.status==='active').length;
+  document.getElementById('s-sched').textContent=meets.filter(m=>m.status==='scheduled').length;
+  document.getElementById('s-hrs').textContent=(meets.reduce((a,m)=>a+m.dur,0)/60).toFixed(1);
+}
+function setTab(t){
+  ['overview','meetings','schedule','join'].forEach(k=>{
+    document.getElementById('dt-'+k).style.display=k===t?'block':'none';
+    document.getElementById('nav-'+k).classList.toggle('active',k===t);
+  });
+  if(t==='meetings')renderList();
+}
+function startInstant(){joinRoom('room_instant_'+Math.random().toString(36).substr(2,6));}
+function doJoin(){const id=document.getElementById('j-id').value.trim();if(id)joinRoom(id);}
+function joinRoom(id){
+  document.getElementById('room-id-show').textContent=id;
+  if(user){
+    const ini=user.name.split(' ').map(n=>n[0]).join('').toUpperCase();
+    document.getElementById('room-avatar').textContent=ini;
+    document.getElementById('ppl-avatar').textContent=ini;
+    document.getElementById('room-vname').textContent=user.name+' (You)';
+    document.getElementById('ppl-name').textContent=user.name;
+  }
+  showPage('meeting');startTimer();
+}
+function startTimer(){
+  secs=0;if(timer)clearInterval(timer);
+  timer=setInterval(()=>{secs++;const m=String(Math.floor(secs/60)).padStart(2,'0'),s=String(secs%60).padStart(2,'0');document.getElementById('room-timer').textContent=m+':'+s;},1000);
+}
+function leaveRoom(){clearInterval(timer);timer=null;if(user){showPage('dashboard');setTab('overview');}else showPage('landing');}
+function setPTab(t){
+  ['chat','ai','people'].forEach(k=>{
+    document.getElementById('ptab-'+k).classList.toggle('active',k===t);
+    document.getElementById('pb-'+k).style.display=k===t?'block':'none';
+  });
+}
+function sendMsg(){
+  const inp=document.getElementById('ci-msg');const txt=inp.value.trim();if(!txt)return;
+  const nm=user?user.name:'You';
+  const d=document.createElement('div');d.className='cmsg';
+  d.innerHTML=`<div class="csender" style="color:#fdd663">${nm}</div><div class="ctext">${txt}</div>`;
+  document.getElementById('chat-msgs').appendChild(d);
+  d.scrollIntoView({behavior:'smooth'});inp.value='';
+}
+function tgl(k){
+  ctrl[k]=!ctrl[k];
+  const b=document.getElementById('c-'+k);
+  b.classList.toggle('on',ctrl[k]);
+}
+function genSummary(){
+  const btn=document.getElementById('sum-btn');btn.textContent='Generating...';btn.disabled=true;
+  setTimeout(()=>{
+    const d=document.createElement('div');d.className='ai-block';d.style.marginTop='10px';
+    d.innerHTML=`<div class="ai-lbl">Meeting summary</div><p>Topics covered:<br>Sprint review and progress update<br>Demo presentation — Priya<br>Backend API review — Ankit<br><br>Action items:<br>Priya: Share demo recording by EOD<br>Ankit: Submit API PR for review<br>Team: Update task board by Friday</p>`;
+    document.getElementById('pb-ai').insertBefore(d,btn);
+    btn.textContent='Summary generated';btn.style.background='#1e3a2e';btn.style.color='#81c995';
+  },1600);
+}
+function doSchedule(){
+  const t=document.getElementById('sch-title').value.trim();
+  const d=document.getElementById('sch-date').value;
+  const ti=document.getElementById('sch-time').value;
+  const er=document.getElementById('sch-err');const ok=document.getElementById('sch-ok');
+  er.style.display='none';ok.style.display='none';
+  if(!t||!d||!ti){er.textContent='Please fill in title, date, and time.';er.style.display='block';return;}
+  const dur=parseInt(document.getElementById('sch-dur').value);
+  const id='room_'+t.toLowerCase().replace(/\s+/g,'_').substr(0,12)+'_'+Math.random().toString(36).substr(2,4);
+  meets.push({id,title:t,status:'scheduled',date:d+' '+ti,dur});
+  ok.textContent=`"${t}" scheduled. Meeting ID: ${id}`;ok.style.display='block';
+  document.getElementById('sch-title').value='';document.getElementById('sch-date').value='';document.getElementById('sch-time').value='';
+}
+function doLogout(){user=null;showPage('landing');}
+showPage('landing');
+</script>
+</body>
+</html>
