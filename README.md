@@ -6,7 +6,7 @@
 ## 📋 Project Identity
 * **Title**: IntellMeet – AI-Powered Enterprise Meeting & Collaboration Platform
 * **Subtitle**: Production-Grade Full-Stack MERN Application with Real-Time Video, AI Meeting Intelligence & Team Collaboration
-* **Author**: **Zidio Development** ✨
+* **Author**: Shanjivkkumar
 * **Domain**: Web Development (MERN) Domain Portfolio Reference
 * **Date**: March/April 2026
 * **Version**: `2.0 – Industry Edition`
