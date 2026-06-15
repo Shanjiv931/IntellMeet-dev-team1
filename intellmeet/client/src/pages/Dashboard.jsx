@@ -14,7 +14,7 @@ import AnalyticsDashboard from '../components/analytics/AnalyticsDashboard';
 import api from '../utils/api';
 import './Dashboard.css';
 
-export default function Dashboard({ onNavigate, user }) {
+export default function Dashboard({ onNavigate, user, activeMeeting }) {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [meetings, setMeetings] = useState([]);
   const [selectedSummary, setSelectedSummary] = useState(0);
@@ -22,6 +22,7 @@ export default function Dashboard({ onNavigate, user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [redirectedForEndedMeeting, setRedirectedForEndedMeeting] = useState(false);
 
   // Notifications state
   const [notifications, setNotifications] = useState([]);
@@ -421,6 +422,19 @@ export default function Dashboard({ onNavigate, user }) {
   // Filter meetings into Scheduled vs Completed
   const upcomingMeetings = filteredMeetings.filter(m => m.status === 'SCHEDULED' || m.status === 'ACTIVE');
   const recentMeetings = filteredMeetings.filter(m => m.status === 'COMPLETED');
+
+  // Automatically redirect to summaries tab and select the completed meeting if navigating from Room.jsx
+  useEffect(() => {
+    if (activeMeeting && activeMeeting.status === 'COMPLETED' && meetings.length > 0 && !redirectedForEndedMeeting) {
+      const id = activeMeeting._id || activeMeeting.id;
+      const index = recentMeetings.findIndex(m => (m._id || m.id) === id);
+      if (index !== -1) {
+        setSelectedSummary(index);
+        setCurrentTab('summaries');
+        setRedirectedForEndedMeeting(true);
+      }
+    }
+  }, [activeMeeting, meetings, redirectedForEndedMeeting, recentMeetings]);
 
   // Handle checking/unchecking of action items in real-time
   const handleToggleActionItem = async (meetingId, itemIndex) => {
@@ -948,9 +962,11 @@ export default function Dashboard({ onNavigate, user }) {
                         const id = meeting._id || meeting.id;
                         const dateObj = new Date(meeting.startTime);
                         const dateStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-                        const durationStr = meeting.endTime 
-                          ? `${Math.round((new Date(meeting.endTime) - dateObj) / 60000)} mins`
-                          : '30 mins';
+                        const durationStr = meeting.duration 
+                          ? `${meeting.duration} mins`
+                          : (meeting.endTime 
+                            ? `${Math.round((new Date(meeting.endTime) - dateObj) / 60000)} mins`
+                            : '30 mins');
                         
                         return (
                           <div 
@@ -981,7 +997,7 @@ export default function Dashboard({ onNavigate, user }) {
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 0 1 7.54 16.59c-.24.25-.36.59-.36.93v1.64c0 .46-.37.84-.83.84H7.66A.83.83 0 0 1 6.83 21v-1.64c0-.34-.12-.68-.36-.93A10 10 0 0 1 12 2z"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
                       AI Summaries Widget
                     </h2>
-                    <span className="header-badge">GPT-4o</span>
+                    <span className="header-badge">Groq Llama 3.3</span>
                   </div>
                   
                   {currentSummaryItem ? (
@@ -1081,7 +1097,7 @@ export default function Dashboard({ onNavigate, user }) {
                               {m.status}
                             </span>
                             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                              {dateObj.toLocaleDateString()}
+                              {dateObj.toLocaleDateString()} {isCompleted && `• ${m.duration || 30} mins`}
                             </span>
                           </div>
                           <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '6px', color: 'var(--text-main)' }}>{m.title}</h3>
@@ -1233,13 +1249,13 @@ export default function Dashboard({ onNavigate, user }) {
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Collaborated on: {new Date(currentSummaryItem.startTime).toLocaleString()}
                         </span>
                       </div>
-                      <span className="header-badge" style={{ fontSize: '11px', padding: '4px 10px' }}>GPT-4o Summarized</span>
+                      <span className="header-badge" style={{ fontSize: '11px', padding: '4px 10px' }}>Groq Llama 3.3 Summarized</span>
                     </div>
 
                     {/* Quick Specs */}
                     <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-alt)', padding: '14px', borderRadius: '6px', fontSize: '13px', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>Host:</strong> {currentSummaryItem.host?.name || "IntellMeet Admin"}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> <strong>Role:</strong> Administrator</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <strong>Duration:</strong> {currentSummaryItem.duration || 30} mins</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> <strong>State:</strong> Persistent MongoDB Atlas</div>
                     </div>
 

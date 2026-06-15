@@ -112,9 +112,22 @@ export const updateMeeting = async (req, res, next) => {
 
     const updateFields = { title, description, status, startTime, endTime, summary, transcript, actionItems, keyDiscussionPoints, aiGenerated, lastSummarizedTranscript, scheduledDate, scheduledTime, duration };
 
+    let meeting = null;
+    if (status === 'ACTIVE') {
+      updateFields.startTime = startTime || new Date().toISOString();
+    } else if (status === 'COMPLETED') {
+      meeting = await meetingService.getMeetingById(meetingId);
+      const start = new Date(meeting.startTime || meeting.createdAt || new Date());
+      const end = endTime ? new Date(endTime) : new Date();
+      updateFields.endTime = end.toISOString();
+      updateFields.duration = Math.max(1, Math.round((end - start) / 60000));
+    }
+
     // If meeting is being completed and transcript is provided, run Gemini AI summary
     if (status === 'COMPLETED' && transcript && transcript.trim()) {
-      const meeting = await meetingService.getMeetingById(meetingId);
+      if (!meeting) {
+        meeting = await meetingService.getMeetingById(meetingId);
+      }
       // Cache check: only run Gemini if transcript has actually changed since last run
       if (!meeting.aiGenerated || meeting.lastSummarizedTranscript !== transcript) {
         const aiResult = await aiService.generateMeetingIntelligence(transcript);
@@ -132,6 +145,13 @@ export const updateMeeting = async (req, res, next) => {
         updateFields.lastSummarizedTranscript = meeting.lastSummarizedTranscript;
       }
     }
+
+    // Clean up undefined properties to avoid overwriting existing document values
+    Object.keys(updateFields).forEach(key => {
+      if (updateFields[key] === undefined) {
+        delete updateFields[key];
+      }
+    });
 
     const updated = await meetingService.updateMeeting(
       meetingId,

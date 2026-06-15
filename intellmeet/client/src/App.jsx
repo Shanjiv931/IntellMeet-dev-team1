@@ -141,7 +141,7 @@ function App() {
   }
 
   if (view === 'dashboard') {
-    return <Dashboard onNavigate={handleNavigate} user={currentUser} />;
+    return <Dashboard onNavigate={handleNavigate} user={currentUser} activeMeeting={activeMeeting} />;
   }
 
   return <LandingPage onNavigate={handleNavigate} />;

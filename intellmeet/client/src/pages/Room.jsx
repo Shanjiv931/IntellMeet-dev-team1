@@ -528,7 +528,7 @@ export default function Room({ onNavigate, user, meeting }) {
     }
   };
 
-  const handleLeaveMeeting = () => {
+  const handleLeaveMeeting = async () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -539,6 +539,8 @@ export default function Room({ onNavigate, user, meeting }) {
       screenStreamRef.current.getTracks().forEach(track => track.stop());
     }
     
+    let completedMeeting = meeting;
+
     // Attempt meeting status update (Complete meeting on host leave)
     if (meeting?._id) {
       const title = meeting.title || "Instant Collaboration Sync";
@@ -547,15 +549,21 @@ export default function Room({ onNavigate, user, meeting }) {
       const localTranscriptStr = transcriptHistory.join('\n');
       const transcriptText = localTranscriptStr || `${safeUser.name}: Welcome everyone to our meeting "${title}". Let's discuss project status and next steps.`;
 
-      api.put(`/meetings/${meeting._id}`, { 
-        status: 'COMPLETED',
-        transcript: transcriptText,
-        endTime: new Date().toISOString()
-      })
-      .catch(err => console.warn('Failed to update meeting completion status', err));
+      try {
+        const res = await api.put(`/meetings/${meeting._id}`, { 
+          status: 'COMPLETED',
+          transcript: transcriptText,
+          endTime: new Date().toISOString()
+        });
+        if (res && res.success && res.data && res.data.meeting) {
+          completedMeeting = res.data.meeting;
+        }
+      } catch (err) {
+        console.warn('Failed to update meeting completion status', err);
+      }
     }
 
-    onNavigate('dashboard');
+    onNavigate('dashboard', completedMeeting);
   };
 
   return (
