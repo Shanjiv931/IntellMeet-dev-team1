@@ -1,14 +1,10 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import logger from '../utils/logger.js';
 
 class AIService {
   constructor() {
-    this.apiKey = process.env.GEMINI_API_KEY;
-    this.ai = null;
-    if (this.apiKey) {
-      this.ai = new GoogleGenerativeAI(this.apiKey);
-    } else {
-      logger.warn('GEMINI_API_KEY is not defined in the environment. AI service will run in fallback mock mode.');
+    this.apiKey = process.env.GROQ_API_KEY;
+    if (!this.apiKey) {
+      logger.warn('GROQ_API_KEY is not defined in the environment. AI service will run in fallback mock mode.');
     }
   }
 
@@ -17,51 +13,73 @@ class AIService {
       return this.getFallbackIntelligence('Empty transcript provided.');
     }
 
-    if (!this.ai) {
+    if (!this.apiKey) {
+      logger.info('GROQ_API_KEY not set. Serving fallback mock summary.');
       return this.getFallbackIntelligence(transcript);
     }
 
     try {
-      logger.info('Sending transcript to Gemini API for summarization...');
-      
-      const model = this.ai.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
-        generationConfig: { responseMimeType: 'application/json' }
+      logger.info('Sending transcript to Groq API (Llama 3.3 70B) for summarization...');
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an AI meeting assistant. Analyze the meeting transcript and provide the output strictly in JSON format matching the schema requested.'
+            },
+            {
+              role: 'user',
+              content: `
+                Analyze the following meeting transcript.
+                Generate the meeting intelligence containing:
+                1. Executive Summary: A concise paragraph summary of the meeting.
+                2. Key Discussion Points: A list of main topics discussed.
+                3. Action Items: A list of tasks, along with the suggested owner for each task (if a specific person can be identified from the transcript, else leave assignee empty).
+
+                Provide the output strictly in the following JSON format:
+                {
+                  "summary": "Executive Summary goes here...",
+                  "keyDiscussionPoints": [
+                    "Discussion point 1",
+                    "Discussion point 2"
+                  ],
+                  "actionItems": [
+                    {
+                      "text": "Action item description here",
+                      "completed": false,
+                      "assignee": "Suggested Owner name"
+                    }
+                  ]
+                }
+
+                Transcript:
+                """
+                ${transcript}
+                """
+              `
+            }
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.2
+        })
       });
 
-      const prompt = `
-        You are an AI meeting assistant. Analyze the following meeting transcript.
-        Generate the meeting intelligence containing:
-        1. Executive Summary: A concise paragraph summary of the meeting.
-        2. Key Discussion Points: A list of main topics discussed.
-        3. Action Items: A list of tasks, along with the suggested owner for each task (if a specific person can be identified from the transcript, else leave assignee empty).
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Groq API request failed with status ${response.status}: ${errorText}`);
+      }
 
-        Provide the output strictly in the following JSON format:
-        {
-          "summary": "Executive Summary goes here...",
-          "keyDiscussionPoints": [
-            "Discussion point 1",
-            "Discussion point 2"
-          ],
-          "actionItems": [
-            {
-              "text": "Action item description here",
-              "completed": false,
-              "assignee": "Suggested Owner name"
-            }
-          ]
-        }
+      const data = await response.json();
+      const responseText = data.choices[0].message.content;
+      logger.info('Groq summary generated successfully.');
 
-        Transcript:
-        """
-        ${transcript}
-        """
-      `;
-
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
-      logger.info('Gemini summary generated successfully.');
-      
       try {
         const parsed = JSON.parse(responseText.trim());
         return {
@@ -74,27 +92,25 @@ class AIService {
           })) : []
         };
       } catch (parseErr) {
-        logger.error('Failed to parse JSON response from Gemini:', parseErr);
+        logger.error('Failed to parse JSON response from Groq:', parseErr);
         logger.debug('Raw response was:', responseText);
         return this.getFallbackIntelligence(transcript);
       }
     } catch (apiErr) {
-      logger.error('Gemini API request failed:', apiErr);
+      logger.error('Groq API request failed:', apiErr);
       return this.getFallbackIntelligence(transcript);
     }
   }
 
   getFallbackIntelligence(transcript) {
     logger.info('Generating structured fallback summary from transcript metadata.');
-    
-    // Parse speaker lines if present to create simple fallback discussion points
+
     const lines = transcript.split('\n').filter(l => l.trim());
     const discussionPoints = [];
     const actionItems = [];
-    
+
     if (lines.length > 0) {
       lines.slice(0, 3).forEach(line => {
-        // Remove timestamps e.g. [12:30:15]
         const cleanLine = line.replace(/^\[.*?\]\s*/, '');
         discussionPoints.push(`Participant input recorded: "${cleanLine.slice(0, 80)}${cleanLine.length > 80 ? '...' : ''}"`);
       });
