@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import api from '../../utils/api';
 import './WorkspaceKanban.css';
@@ -10,7 +10,7 @@ const COLUMNS = [
   { id: 'DONE', title: 'Done', color: '#10b981' }
 ];
 
-export default function WorkspaceKanban({ user }) {
+export default function WorkspaceKanban() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,7 +40,9 @@ export default function WorkspaceKanban({ user }) {
 
   // Connect to Kanban socket channel
   useEffect(() => {
-    fetchTasks();
+    const timer = setTimeout(() => {
+      fetchTasks();
+    }, 0);
 
     const socketUrl = import.meta.env.VITE_SOCKET_URL || 'https://intellmeet-backend-5j5a.onrender.com';
     console.log('Connecting to Kanban Sockets Gateway:', socketUrl);
@@ -74,6 +76,7 @@ export default function WorkspaceKanban({ user }) {
     socketRef.current = socket;
 
     return () => {
+      clearTimeout(timer);
       socket.disconnect();
     };
   }, []);

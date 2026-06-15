@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import RoomHeader from '../components/room/RoomHeader';
 import VideoGrid from '../components/room/VideoGrid';
@@ -264,6 +264,66 @@ export default function Room({ onNavigate, user, meeting }) {
     };
   }, [safeUser.name]);
 
+  // Standard RTCPeerConnection mesh initiator
+  function initializePeerConnection(peerId, isInitiator) {
+    if (peersRef.current[peerId]) return peersRef.current[peerId];
+
+    console.log(`Initializing RTCPeerConnection for peer: ${peerId}. Initiator: ${isInitiator}`);
+    
+    // Standard STUN/TURN configurations
+    const pc = new RTCPeerConnection({
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19002' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    });
+
+    // Handle ICE Candidates
+    pc.onicecandidate = (event) => {
+      if (event.candidate && socketRef.current) {
+        socketRef.current.emit('webrtc-candidate', {
+          targetId: peerId,
+          candidate: event.candidate
+        });
+      }
+    };
+
+    // Attach local stream tracks to connection
+    const currentStream = screenStreamRef.current || localStreamRef.current;
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => {
+        pc.addTrack(track, currentStream);
+      });
+    }
+
+    // Handle streams
+    pc.ontrack = (event) => {
+      console.log(`WebRTC stream track resolved from peer: ${peerId}`);
+      const [remoteStream] = event.streams;
+      setRemoteStreams(prev => ({
+        ...prev,
+        [peerId]: remoteStream
+      }));
+    };
+
+    peersRef.current[peerId] = pc;
+
+    // Send SDP Offer if initiator
+    if (isInitiator) {
+      pc.onnegotiationneeded = async () => {
+        try {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          socketRef.current.emit('webrtc-offer', { targetId: peerId, offer });
+        } catch (err) {
+          console.error('Failed to create SDP offer negotiating:', err);
+        }
+      };
+    }
+
+    return pc;
+  }
+
   // Socket Connection and Event Listeners
   useEffect(() => {
     const socketUrl = import.meta.env.VITE_SOCKET_URL || 'https://intellmeet-backend-5j5a.onrender.com';
@@ -410,67 +470,6 @@ export default function Room({ onNavigate, user, meeting }) {
       }
     };
   }, [roomId]);
-
-  // Standard RTCPeerConnection mesh initiator
-  const initializePeerConnection = (peerId, isInitiator) => {
-    if (peersRef.current[peerId]) return peersRef.current[peerId];
-
-    console.log(`Initializing RTCPeerConnection for peer: ${peerId}. Initiator: ${isInitiator}`);
-    
-    // Standard STUN/TURN configurations
-    const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19002' },
-        { urls: 'stun:stun1.l.google.com:19302' }
-      ]
-    });
-
-    // Handle ICE Candidates
-    pc.onicecandidate = (event) => {
-      if (event.candidate && socketRef.current) {
-        socketRef.current.emit('webrtc-candidate', {
-          targetId: peerId,
-          candidate: event.candidate
-        });
-      }
-    };
-
-    // Attach local stream tracks to connection
-    const currentStream = screenStreamRef.current || localStreamRef.current;
-    if (currentStream) {
-      currentStream.getTracks().forEach(track => {
-        pc.addTrack(track, currentStream);
-      });
-    }
-
-    // Handle streams
-    pc.ontrack = (event) => {
-      console.log(`WebRTC stream track resolved from peer: ${peerId}`);
-      const [remoteStream] = event.streams;
-      setRemoteStreams(prev => ({
-        ...prev,
-        [peerId]: remoteStream
-      }));
-    };
-
-    peersRef.current[peerId] = pc;
-
-    // Send SDP Offer if initiator
-    if (isInitiator) {
-      pc.onnegotiationneeded = async () => {
-        try {
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          socketRef.current.emit('webrtc-offer', { targetId: peerId, offer });
-        } catch (err) {
-          console.error('Failed to create SDP offer negotiating:', err);
-        }
-      };
-    }
-
-    return pc;
-  };
-
   // Sync client control button toggles with socket channel
   useEffect(() => {
     if (socketRef.current) {

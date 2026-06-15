@@ -64,7 +64,23 @@ export const getMyMeetings = async (req, res, next) => {
 export const getMeetingDetails = async (req, res, next) => {
   try {
     const meetingId = req.params.id;
+    const userId = req.user._id || req.user.id;
+    const userRole = req.user.role;
+
     const meeting = await meetingService.getMeetingById(meetingId);
+
+    // BOLA/IDOR Security Enforcement
+    const hostId = meeting.host._id || meeting.host;
+    const isHost = hostId.toString() === userId.toString();
+    const isParticipant = meeting.participants && meeting.participants.some(p => {
+      const pId = p._id || p;
+      return pId.toString() === userId.toString();
+    });
+    const isAdmin = userRole === 'ADMIN';
+
+    if (!isHost && !isParticipant && !isAdmin) {
+      throw new AppError('Forbidden: Not authorized to access details of this meeting.', 403);
+    }
 
     res.status(200).json({
       success: true,
@@ -153,6 +169,8 @@ export const deleteMeeting = async (req, res, next) => {
 export const summarizeActiveMeeting = async (req, res, next) => {
   try {
     const meetingId = req.params.id;
+    const userId = req.user._id || req.user.id;
+    const userRole = req.user.role;
     const { transcript } = req.body;
 
     if (!transcript || !transcript.trim()) {
@@ -160,6 +178,19 @@ export const summarizeActiveMeeting = async (req, res, next) => {
     }
 
     const meeting = await meetingService.getMeetingById(meetingId);
+
+    // BOLA/IDOR Security Enforcement
+    const hostId = meeting.host._id || meeting.host;
+    const isHost = hostId.toString() === userId.toString();
+    const isParticipant = meeting.participants && meeting.participants.some(p => {
+      const pId = p._id || p;
+      return pId.toString() === userId.toString();
+    });
+    const isAdmin = userRole === 'ADMIN';
+
+    if (!isHost && !isParticipant && !isAdmin) {
+      throw new AppError('Forbidden: Not authorized to summarize this meeting.', 403);
+    }
 
     // Cache check: Return existing details if transcript hasn't changed
     if (meeting.aiGenerated && meeting.lastSummarizedTranscript === transcript) {

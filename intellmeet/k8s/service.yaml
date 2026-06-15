@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: intellmeet-backend-service
+  namespace: default
+  labels:
+    app: intellmeet-backend
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: intellmeet-backend
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: intellmeet-frontend-service
+  namespace: default
+  labels:
+    app: intellmeet-frontend
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: intellmeet-frontend
+  type: NodePort

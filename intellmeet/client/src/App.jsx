@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -24,7 +24,7 @@ function App() {
     try {
       const savedUser = localStorage.getItem('intellmeet_user');
       return savedUser ? 'dashboard' : 'landing';
-    } catch (e) {
+    } catch {
       return 'landing';
     }
   });
@@ -32,11 +32,13 @@ function App() {
   // Track currently active meeting room details
   const [activeMeeting, setActiveMeeting] = useState(null);
 
-  // Session gate: Redirect unauthenticated requests to the Login page
   useEffect(() => {
     const privateViews = ['dashboard', 'lobby', 'room'];
     if (privateViews.includes(view) && !currentUser) {
-      setView('login');
+      const timer = setTimeout(() => {
+        setView('login');
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [view, currentUser]);
 
@@ -63,6 +65,7 @@ function App() {
       }
     };
     verifySession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleNavigate = (targetView, meetingData = null) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import './AnalyticsDashboard.css';
 
@@ -307,7 +307,7 @@ function RadialGauge({ value }) {
   );
 }
 
-export default function AnalyticsDashboard({ user, setCurrentTab }) {
+export default function AnalyticsDashboard({ setCurrentTab }) {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -331,7 +331,10 @@ export default function AnalyticsDashboard({ user, setCurrentTab }) {
   };
 
   useEffect(() => {
-    fetchAnalytics();
+    const timer = setTimeout(() => {
+      fetchAnalytics();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   if (loading) {

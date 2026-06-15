@@ -3,6 +3,11 @@ import User from '../models/User.model.js';
 import AppError from '../utils/AppError.js';
 import logger from '../utils/logger.js';
 
+// Helper to escape characters for safe RegExp construction (mitigates ReDoS / RegExp Injection)
+const escapeRegExp = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 /**
  * Get all tasks
  * GET /api/tasks
@@ -45,7 +50,7 @@ export const createTask = async (req, res, next) => {
       const trimmedName = assigneeName.trim();
       try {
         const matchedUser = await User.findOne({
-          name: { $regex: new RegExp('^' + trimmedName + '$', 'i') }
+          name: { $regex: new RegExp('^' + escapeRegExp(trimmedName) + '$', 'i') }
         });
         if (matchedUser) {
           assigneeId = matchedUser._id;
@@ -115,7 +120,7 @@ export const updateTask = async (req, res, next) => {
       // Re-run matching if assigneeName was explicitly updated
       if (assigneeName && !assignee) {
         const matchedUser = await User.findOne({
-          name: { $regex: new RegExp('^' + assigneeName.trim() + '$', 'i') }
+          name: { $regex: new RegExp('^' + escapeRegExp(assigneeName.trim()) + '$', 'i') }
         });
         if (matchedUser) {
           updateFields.assignee = matchedUser._id;

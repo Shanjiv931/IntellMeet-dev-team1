@@ -1,0 +1,41 @@
+replicaCount: 2
+
+backend:
+  name: backend
+  image:
+    repository: shanjivkr931/intellmeet-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8080
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+  # Credentials matching database / JWT tokens secrets
+  secrets:
+    mongoUri: "mongodb+srv://admin:pass@cluster.mongodb.net/intellmeet"
+    jwtSecret: "intellmeet_access_token_secret_secure_key_at_least_32_chars"
+    jwtRefreshSecret: "intellmeet_refresh_token_secret_secure_key_at_least_32_chars"
+
+frontend:
+  name: frontend
+  image:
+    repository: shanjivkr931/intellmeet-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 80
+  resources:
+    limits:
+      cpu: 300m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  host: "intellmeet.app"

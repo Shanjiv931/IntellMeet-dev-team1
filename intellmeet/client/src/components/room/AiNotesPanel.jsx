@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import './AiNotesPanel.css';
 
-export default function AiNotesPanel({ meeting, user, transcriptHistory = [] }) {
-  const meetingTitle = meeting?.title || "Collaboration Session";
+export default function AiNotesPanel({ meeting, transcriptHistory = [] }) {
   const meetingId = meeting?._id || meeting?.id;
 
   const [aiSummary, setAiSummary] = useState('');
@@ -15,9 +14,12 @@ export default function AiNotesPanel({ meeting, user, transcriptHistory = [] }) 
   // Load existing summary/action items if already present in the active meeting object
   useEffect(() => {
     if (meeting) {
-      setAiSummary(meeting.summary || '');
-      setKeyPoints(meeting.keyDiscussionPoints || []);
-      setActionItems(meeting.actionItems || []);
+      const timer = setTimeout(() => {
+        setAiSummary(meeting.summary || '');
+        setKeyPoints(meeting.keyDiscussionPoints || []);
+        setActionItems(meeting.actionItems || []);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [meeting]);
 

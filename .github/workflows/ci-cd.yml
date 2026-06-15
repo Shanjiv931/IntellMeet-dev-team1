@@ -1,0 +1,84 @@
+name: IntellMeet Production CI-CD Pipeline
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Monorepo Codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            intellmeet/client/package-lock.json
+            intellmeet/server/package-lock.json
+
+      # ---- AUDIT BACKEND SERVER ----
+      - name: Install Server Dependencies
+        run: |
+          cd intellmeet/server
+          npm ci
+
+      - name: Verify Server Startup Scripts
+        run: |
+          cd intellmeet/server
+          node --check src/server.js
+
+      # ---- AUDIT FRONTEND CLIENT ----
+      - name: Install Client Dependencies
+        run: |
+          cd intellmeet/client
+          npm ci
+
+      - name: Run Client Code Quality Linter
+        run: |
+          cd intellmeet/client
+          npm run lint
+
+      - name: Verify Client Production Build compiles
+        run: |
+          cd intellmeet/client
+          npm run build
+
+  build-docker-images:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Monorepo Codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ---- BUILD BACKEND CONTAINER ----
+      - name: Build Backend Docker Image (Verification Mode)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./intellmeet/server
+          file: ./intellmeet/server/Dockerfile
+          push: false
+          tags: shanjivkr931/intellmeet-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ---- BUILD FRONTEND CONTAINER ----
+      - name: Build Frontend Docker Image (Verification Mode)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./intellmeet/client
+          file: ./intellmeet/client/Dockerfile
+          push: false
+          tags: shanjivkr931/intellmeet-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

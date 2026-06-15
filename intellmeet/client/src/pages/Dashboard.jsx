@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import DashboardNavbar from '../components/DashboardNavbar';
 import WorkspaceKanban from '../components/room/WorkspaceKanban';
@@ -289,10 +289,13 @@ export default function Dashboard({ onNavigate, user }) {
   };
 
   useEffect(() => {
-    fetchMeetings();
-    fetchUserSettings();
-    fetchProfile();
-    fetchSessions();
+    const timer = setTimeout(() => {
+      fetchMeetings();
+      fetchUserSettings();
+      fetchProfile();
+      fetchSessions();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [currentTab]);
 
   // Apply Appearance Preferences to document root
@@ -383,6 +386,7 @@ export default function Dashboard({ onNavigate, user }) {
     }
   });
 
+  /*
   const filteredTasks = allTasks.filter(t => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
@@ -392,6 +396,7 @@ export default function Dashboard({ onNavigate, user }) {
       (t.assignee && t.assignee.toLowerCase().includes(query))
     );
   });
+  */
 
   const handleConvertToKanban = async (actionItem, meetingId) => {
     const dueDatePrompt = prompt(`Enter due date for task "${actionItem.text}" (YYYY-MM-DD) or leave empty:`);
@@ -725,6 +730,7 @@ export default function Dashboard({ onNavigate, user }) {
               <h1>Welcome Back, {firstName}!</h1>
               <p>Here is your meeting intelligence recap for today.</p>
             </div>
+            {error && <div className="dashboard-error-banner" style={{ color: '#ef4444', backgroundColor: '#fef2f2', padding: '12px', borderRadius: '6px', marginBottom: '20px', fontSize: '14px', border: '1px solid #fee2e2', fontWeight: '500' }}>⚠️ {error}</div>}
 
             {/* Quick Action Grid */}
             <div className="quick-actions-grid">

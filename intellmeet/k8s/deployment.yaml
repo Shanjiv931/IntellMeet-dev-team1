@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intellmeet-backend-deployment
+  namespace: default
+  labels:
+    app: intellmeet-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: intellmeet-backend
+  template:
+    metadata:
+      labels:
+        app: intellmeet-backend
+    spec:
+      containers:
+        - name: intellmeet-backend
+          image: shanjivkr931/intellmeet-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: NODE_ENV
+              value: "production"
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: intellmeet-secrets
+                  key: mongo-uri
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: intellmeet-secrets
+                  key: jwt-secret
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: intellmeet-secrets
+                  key: jwt-refresh-secret
+            - name: CLIENT_URL
+              value: "https://intellmeet.app"
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /api/auth/me
+              port: 8080
+              httpHeaders:
+                - name: Authorization
+                  value: Bearer check-probe
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/auth/me
+              port: 8080
+              httpHeaders:
+                - name: Authorization
+                  value: Bearer check-probe
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intellmeet-frontend-deployment
+  namespace: default
+  labels:
+    app: intellmeet-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: intellmeet-frontend
+  template:
+    metadata:
+      labels:
+        app: intellmeet-frontend
+    spec:
+      containers:
+        - name: intellmeet-frontend
+          image: shanjivkr931/intellmeet-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10

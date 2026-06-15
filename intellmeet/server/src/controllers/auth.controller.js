@@ -8,7 +8,7 @@ import logger from '../utils/logger.js';
  */
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       throw new AppError('Missing required inputs: name, email, and password must all be provided.', 400);
@@ -17,7 +17,7 @@ export const register = async (req, res, next) => {
     const userAgent = req.headers['user-agent'] || 'Unknown Device';
     const ipAddress = req.ip || 'Unknown IP';
 
-    const result = await authService.registerUser({ name, email, password, role, userAgent, ipAddress });
+    const result = await authService.registerUser({ name, email, password, role: 'MEMBER', userAgent, ipAddress });
 
     res.status(201).json({
       success: true,

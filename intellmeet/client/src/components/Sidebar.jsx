@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
 import './Sidebar.css';
 
-export default function Sidebar({ onNavigate, currentTab, setCurrentTab }) {
+export default function Sidebar({ currentTab, setCurrentTab }) {
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
     { id: 'meetings', name: 'Meetings', icon: '🎥' },
