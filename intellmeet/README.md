@@ -595,9 +595,28 @@ All observability resources are compiled inside [k8s/monitoring.yaml](file:///c:
      ```
    * Configure Prometheus datasource pointing to `http://prometheus-service.monitoring.svc.cluster.local:9090`.
 
-#### Accessing Sentry logs
-* Navigate to **`sentry.io`** and log in.
-* Select the IntellMeet project corresponding to your `SENTRY_DSN` and `VITE_SENTRY_DSN` variables to explore stack traces, CPU/memory performance curves, and Session Replay video recordings.
+#### Accessing Sentry logs & Error Tracking
+Sentry serves a distinct role compared to Prometheus & Grafana:
+* **Prometheus & Grafana** track **numerical metrics over time** (e.g., event counters, CPU usage, RAM footprint, and endpoint latency budgets) to see *if* things are running slowly or under high load.
+* **Sentry** captures **code-level exceptions, UI crashes, and runtime errors** to tell you *exactly what line of code broke and why*.
+
+##### Sentry Features for IntellMeet:
+1. **Error Diagnostics**: If a backend route throws a database query error or the React UI experiences a component rendering crash, Sentry logs the error along with the complete file path, function name, and line number.
+2. **Session Replay**: Captures privacy-safe, video-like recordings of user actions leading up to a crash, showing exactly what they clicked and hovered on.
+3. **Real-time Alerting**: Instantly alerts developers via email or Slack when a new error occurs in production.
+
+To access your logged errors, navigate to **`sentry.io`**, log in, and view your linked `intellmeet-backend` and `intellmeet-frontend` project dashboards.
+
+#### Querying & Visualizing Metrics in Grafana
+Once Grafana is running and connected to Prometheus, you can explore live metrics:
+1. Open the Grafana sidebar and click on the **Explore** compass icon.
+2. In the query editor box, select your Prometheus datasource and enter a query (e.g. `http_requests_total`).
+3. Click the blue **"Run query"** button (or press `Shift + Enter`) to view real-time performance graphs.
+4. **Key Metrics to Monitor**:
+   * `http_requests_total`: Total number of API requests parsed by method, route, and status.
+   * `http_request_duration_seconds`: Histogram of request processing times (verifying the <200ms NFR).
+   * `process_resident_memory_bytes`: Node.js server RAM utilization.
+   * `process_cpu_seconds_total`: Node.js server CPU load metrics.
 
 ---
 
