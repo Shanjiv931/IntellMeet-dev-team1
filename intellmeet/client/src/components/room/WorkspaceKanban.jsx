@@ -44,7 +44,15 @@ export default function WorkspaceKanban() {
       fetchTasks();
     }, 0);
 
-    const socketUrl = import.meta.env.VITE_SOCKET_URL || 'https://intellmeet-backend-5j5a.onrender.com';
+    let socketUrl = import.meta.env.VITE_SOCKET_URL || 'https://intellmeet-backend-5j5a.onrender.com';
+    
+    // Self-healing runtime URL fix for misconfigured Vercel environment variables
+    if (socketUrl.includes('intellmeet-backend.onrender.com') || socketUrl.includes('intellmeet-api.onrender.com')) {
+      socketUrl = socketUrl
+        .replace('intellmeet-backend.onrender.com', 'intellmeet-backend-5j5a.onrender.com')
+        .replace('intellmeet-api.onrender.com', 'intellmeet-backend-5j5a.onrender.com');
+    }
+
     console.log('Connecting to Kanban Sockets Gateway:', socketUrl);
     const socket = io(socketUrl, {
       withCredentials: true,

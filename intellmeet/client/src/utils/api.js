@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://intellmeet-backend-5j5a.onrender.com/api';
+let API_BASE_URL = import.meta.env.VITE_API_URL || 'https://intellmeet-backend-5j5a.onrender.com/api';
+
+// Self-healing runtime URL fix for misconfigured Vercel environment variables
+if (API_BASE_URL.includes('intellmeet-backend.onrender.com') || API_BASE_URL.includes('intellmeet-api.onrender.com')) {
+  API_BASE_URL = API_BASE_URL
+    .replace('intellmeet-backend.onrender.com', 'intellmeet-backend-5j5a.onrender.com')
+    .replace('intellmeet-api.onrender.com', 'intellmeet-backend-5j5a.onrender.com');
+}
+
 
 class ApiClient {
   constructor() {
