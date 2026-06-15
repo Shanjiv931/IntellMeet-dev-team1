@@ -557,34 +557,47 @@ graph LR
 You can query the raw Prometheus scrape logs directly from the backend server endpoint:
 `https://intellmeet-backend-5j5a.onrender.com/metrics` (or `http://localhost:8080/metrics` locally).
 
-#### Launching Prometheus & Grafana in Kubernetes
+#### Option A: Running Locally via Docker Compose (100% Free)
+If you have Docker installed, you can launch the pre-configured local monitoring stack:
+1. **Run the compose file**:
+   ```bash
+   docker compose -f intellmeet/docker-compose.monitoring.yml up -d
+   ```
+2. **Access Prometheus**: Navigate to `http://localhost:9090`.
+3. **Access Grafana**: Navigate to `http://localhost:3000` (Login: `admin` / `admin`).
+4. **Configure Datasource**: Add a Prometheus datasource pointing to `http://host.docker.internal:9090`.
+
+#### Option B: Running Locally via Windows Binaries (100% Free & No Docker Required)
+If you do not have Docker installed, you can run the native Windows executable files:
+1. **Configure & Run Prometheus**:
+   * Download the Windows zip from the [Prometheus Download Page](https://prometheus.io/download/).
+   * Extract it and replace the default `prometheus.yml` inside the extracted folder with the [prometheus.yml](file:///c:/Users/Shanjivkkumar/Downloads/IntellMeet-dev/intellmeet/prometheus/prometheus.yml) file from this repo.
+   * Double-click `prometheus.exe` to start scraping. Open `http://localhost:9090` to verify.
+2. **Install & Run Grafana**:
+   * Download the **Windows Installer (64 Bit) MSI** from the [Grafana Download Page](https://grafana.com/grafana/download?platform=windows) and run it.
+   * Open `http://localhost:3000` (Login: `admin` / `admin`).
+   * Add a Prometheus datasource pointing to `http://localhost:9090` and save.
+
+#### Option C: Launching Prometheus & Grafana in Kubernetes
 All observability resources are compiled inside [k8s/monitoring.yaml](file:///c:/Users/Shanjivkkumar/Downloads/IntellMeet-dev/intellmeet/k8s/monitoring.yaml).
 1. **Apply the manifests**:
    ```bash
    kubectl apply -f intellmeet/k8s/monitoring.yaml
    ```
-2. **Access Prometheus**:
-   * Port-forward the service to your local machine:
+2. **Access Prometheus & Grafana**:
+   * Port-forward Prometheus:
      ```bash
      kubectl port-forward svc/prometheus-service 9090:9090 -n monitoring
      ```
-   * Open **`http://localhost:9090`** in your browser.
-3. **Access Grafana**:
-   * Port-forward the service to your local machine:
+   * Port-forward Grafana:
      ```bash
      kubectl port-forward svc/grafana-service 3000:3000 -n monitoring
      ```
-   * Open **`http://localhost:3000`** in your browser.
-   * **Default Login**: Username: `admin` | Password: `admin`
-4. **Configure Grafana Datasource**:
-   * Navigate to **Connections > Data Sources > Add Data Source**.
-   * Choose **Prometheus**.
-   * Set Connection URL to: `http://prometheus-service.monitoring.svc.cluster.local:9090`
-   * Click **Save & Test**.
+   * Configure Prometheus datasource pointing to `http://prometheus-service.monitoring.svc.cluster.local:9090`.
 
 #### Accessing Sentry logs
 * Navigate to **`sentry.io`** and log in.
-* Select the IntellMeet project corresponding to your `SENTRY_DSN` variable to explore stack traces, CPU/memory performance curves, and Session Replay video recordings.
+* Select the IntellMeet project corresponding to your `SENTRY_DSN` and `VITE_SENTRY_DSN` variables to explore stack traces, CPU/memory performance curves, and Session Replay video recordings.
 
 ---
 
