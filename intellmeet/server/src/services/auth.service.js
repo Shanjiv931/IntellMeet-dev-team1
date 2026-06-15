@@ -9,6 +9,27 @@ import logger from '../utils/logger.js';
 // Resilient in-memory database store for users when MongoDB is offline
 const memoryUsers = [];
 
+// Initialize default admin in memory
+const initializeMemoryAdmin = async () => {
+  try {
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash('Password123!', salt);
+    memoryUsers.push({
+      _id: new mongoose.Types.ObjectId().toString(),
+      name: 'IntellMeet Admin',
+      email: 'admin@intellmeet.app',
+      password: hashedPassword,
+      role: 'ADMIN',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    logger.info('Resilient DB Fallback: Pre-seeded admin user in-memory.');
+  } catch (err) {
+    logger.error('Failed to initialize memory admin:', err);
+  }
+};
+initializeMemoryAdmin();
+
 const isDBConnected = () => mongoose.connection.readyState === 1;
 
 /**
