@@ -15,10 +15,7 @@ export default function Lobby({ onNavigate, user, meeting }) {
     : "Today, 2:00 PM - 3:00 PM (GMT+5:30)";
   const meetingHost = meeting?.host?.name || "Organizing Host";
 
-  const participants = [
-    { initials: "TL", name: "Tech Lead (Alex)", active: true },
-    { initials: "PM", name: "Product Manager (Jane)", active: true }
-  ];
+  const activeParticipants = meeting?.participants || [];
 
   const handleJoin = (e) => {
     e.preventDefault();
@@ -39,7 +36,9 @@ export default function Lobby({ onNavigate, user, meeting }) {
               </div>
             ) : (
               <div className="camera-inactive">
-                <span className="camera-off-icon">📷</span>
+                <span className="camera-off-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34M23 7l-7 5 7 5V7zM1 1l22 22"/></svg>
+                </span>
                 <span className="preview-label">Your camera is OFF</span>
               </div>
             )}
@@ -47,10 +46,18 @@ export default function Lobby({ onNavigate, user, meeting }) {
             {/* Overlay indicators */}
             <div className="status-indicators">
               <span className={`status-badge-icon ${isMicOn ? 'active' : 'muted'}`}>
-                {isMicOn ? '🎤' : '🎙️'}
+                {isMicOn ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 11a7 7 0 0 1-2.29 5.12M19 10v2a7 7 0 0 1-1-3.5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                )}
               </span>
               <span className={`status-badge-icon ${isSpeakerOn ? 'active' : 'muted'}`}>
-                {isSpeakerOn ? '🔊' : '🔇'}
+                {isSpeakerOn ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                )}
               </span>
             </div>
           </div>
@@ -61,21 +68,33 @@ export default function Lobby({ onNavigate, user, meeting }) {
               onClick={() => setIsMicOn(!isMicOn)}
               title={isMicOn ? "Mute Microphone" : "Unmute Microphone"}
             >
-              {isMicOn ? '🎤' : '🎙️'}
+              {isMicOn ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 11a7 7 0 0 1-2.29 5.12M19 10v2a7 7 0 0 1-1-3.5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              )}
             </button>
             <button 
               className={`control-circle-btn ${isCamOn ? 'active' : 'muted'}`} 
               onClick={() => setIsCamOn(!isCamOn)}
               title={isCamOn ? "Turn Camera Off" : "Turn Camera On"}
             >
-              {isCamOn ? '📷' : '📹'}
+              {isCamOn ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34M23 7l-7 5 7 5V7zM1 1l22 22"/></svg>
+              )}
             </button>
             <button 
               className={`control-circle-btn ${isSpeakerOn ? 'active' : 'muted'}`} 
               onClick={() => setIsSpeakerOn(!isSpeakerOn)}
               title={isSpeakerOn ? "Mute Speaker" : "Unmute Speaker"}
             >
-              {isSpeakerOn ? '🔊' : '🔇'}
+              {isSpeakerOn ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+              )}
             </button>
           </div>
         </div>
@@ -99,15 +118,28 @@ export default function Lobby({ onNavigate, user, meeting }) {
             </div>
 
             <div className="participants-box">
-              <h4>👥 Already in call ({participants.length})</h4>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Already in call ({activeParticipants.length})
+              </h4>
               <div className="participants-list">
-                {participants.map((p, idx) => (
-                  <div className="participant-row" key={idx}>
-                    <div className="p-avatar active">{p.initials}</div>
-                    <span className="p-name">{p.name}</span>
-                    <span className="p-status">Connected</span>
-                  </div>
-                ))}
+                {activeParticipants.length === 0 ? (
+                  <p className="no-participants" style={{ opacity: 0.6, fontSize: '0.9rem', fontStyle: 'italic', padding: '8px 0' }}>
+                    No other participants in call yet.
+                  </p>
+                ) : (
+                  activeParticipants.map((p, idx) => {
+                    const pName = typeof p === 'object' ? (p.name || 'Anonymous User') : 'User';
+                    const pInitials = typeof p === 'object' ? (p.avatar || pName.split(' ').map(n=>n[0]).join('').substring(0, 2).toUpperCase()) : 'U';
+                    return (
+                      <div className="participant-row" key={p._id || p.id || idx}>
+                        <div className="p-avatar active">{pInitials}</div>
+                        <span className="p-name">{pName}</span>
+                        <span className="p-status">Connected</span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 

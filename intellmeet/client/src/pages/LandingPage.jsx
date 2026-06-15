@@ -2,6 +2,8 @@ import React from 'react';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import Features from '../components/Features';
+import Pricing from '../components/Pricing';
+import Resources from '../components/Resources';
 import Footer from '../components/Footer';
 import './LandingPage.css';
 
@@ -22,6 +24,8 @@ export default function LandingPage({ onNavigate }) {
         </section>
 
         <Features />
+        <Pricing />
+        <Resources />
       </main>
       <Footer />
     </div>

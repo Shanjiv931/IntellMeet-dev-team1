@@ -4,6 +4,7 @@ import AppError from '../utils/AppError.js';
 import logger from '../utils/logger.js';
 import mongoose from 'mongoose';
 import { memoryStore, isDBConnected } from '../utils/memoryStore.js';
+import * as notificationService from '../services/notification.service.js';
 
 // Helper to escape characters for safe RegExp construction (mitigates ReDoS / RegExp Injection)
 const escapeRegExp = (string) => {
@@ -92,6 +93,15 @@ export const createTask = async (req, res, next) => {
 
       const populated = await Task.findById(task._id);
 
+      if (assigneeId) {
+        await notificationService.createNotification({
+          userId: assigneeId,
+          type: 'TASK_ASSIGNED',
+          title: 'Task Assigned',
+          message: `You have been assigned the task: "${title}"`
+        });
+      }
+
       return res.status(201).json({
         success: true,
         message: 'Task created successfully.',
@@ -125,6 +135,15 @@ export const createTask = async (req, res, next) => {
 
     memoryStore.tasks.push(task);
     logger.info(`Resilient DB Fallback: Created task in-memory: ${task._id}`);
+
+    if (assigneeId) {
+      await notificationService.createNotification({
+        userId: assigneeId,
+        type: 'TASK_ASSIGNED',
+        title: 'Task Assigned (Memory Mode)',
+        message: `You have been assigned the task: "${title}"`
+      });
+    }
 
     return res.status(201).json({
       success: true,
@@ -186,6 +205,15 @@ export const updateTask = async (req, res, next) => {
         runValidators: true
       });
 
+      if (updated.assignee && (!task.assignee || task.assignee.toString() !== updated.assignee.toString())) {
+        await notificationService.createNotification({
+          userId: updated.assignee,
+          type: 'TASK_ASSIGNED',
+          title: 'Task Assigned',
+          message: `You have been assigned the task: "${updated.title}"`
+        });
+      }
+
       return res.status(200).json({
         success: true,
         message: 'Task updated successfully.',
@@ -198,6 +226,8 @@ export const updateTask = async (req, res, next) => {
     if (!task) {
       throw new AppError('Task not found or unauthorized to update.', 404);
     }
+
+    const previousAssignee = task.assignee;
 
     if (title !== undefined) task.title = title;
     if (description !== undefined) task.description = description;
@@ -216,6 +246,15 @@ export const updateTask = async (req, res, next) => {
       }
     }
     task.updatedAt = new Date();
+
+    if (task.assignee && (!previousAssignee || previousAssignee.toString() !== task.assignee.toString())) {
+      await notificationService.createNotification({
+        userId: task.assignee,
+        type: 'TASK_ASSIGNED',
+        title: 'Task Assigned (Memory Mode)',
+        message: `You have been assigned the task: "${task.title}"`
+      });
+    }
 
     return res.status(200).json({
       success: true,

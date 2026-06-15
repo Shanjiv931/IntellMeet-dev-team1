@@ -7,7 +7,8 @@ export const memoryStore = {
   meetings: [],
   tasks: [],
   settings: [],
-  sessions: []
+  sessions: [],
+  notifications: []
 };
 
 export const isDBConnected = () => mongoose.connection.readyState === 1;

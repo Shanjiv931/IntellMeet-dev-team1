@@ -29,7 +29,7 @@ export default function Room({ onNavigate, user, meeting }) {
   
   // Chat Messages State
   const [messages, setMessages] = useState([
-    { sender: "IntellMeet Bot", initials: "🤖", text: `Welcome to your secure collaboration room for "${meetingTitle}". Real-time chat, screen sharing, and AI-powered transcripts are active.` }
+    { sender: "IntellMeet Bot", initials: "AI", text: `Welcome to your secure collaboration room for "${meetingTitle}". Real-time chat, screen sharing, and AI-powered transcripts are active.` }
   ]);
   const [inputMsg, setInputMsg] = useState('');
   
@@ -588,19 +588,19 @@ export default function Room({ onNavigate, user, meeting }) {
                     className={`tab-toggle-btn ${activeSidebarTab === 'chat' ? 'active' : ''}`}
                     onClick={() => setActiveSidebarTab('chat')}
                   >
-                    💬 Chat ({messages.length})
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chat ({messages.length})</span>
                   </button>
                   <button 
                     className={`tab-toggle-btn ${activeSidebarTab === 'participants' ? 'active' : ''}`}
                     onClick={() => setActiveSidebarTab('participants')}
                   >
-                    👥 Participants
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Participants</span>
                   </button>
                   <button 
                     className={`tab-toggle-btn ${activeSidebarTab === 'ainotes' ? 'active' : ''}`}
                     onClick={() => setActiveSidebarTab('ainotes')}
                   >
-                    🤖 AI Notes
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 0 1 7.54 16.59c-.24.25-.36.59-.36.93v1.64c0 .46-.37.84-.83.84H7.66A.83.83 0 0 1 6.83 21v-1.64c0-.34-.12-.68-.36-.93A10 10 0 0 1 12 2z"/><line x1="9" y1="22" x2="15" y2="22"/></svg> AI Notes</span>
                   </button>
                   <button className="sidebar-close-btn" onClick={() => setShowSidebar(false)} aria-label="Close sidebar">
                     ✕
@@ -641,13 +641,13 @@ export default function Room({ onNavigate, user, meeting }) {
                       className={`tab-toggle-btn ${activeSidebarTab === 'participants' ? 'active' : ''}`}
                       onClick={() => setActiveSidebarTab('participants')}
                     >
-                      👥 Participants
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Participants</span>
                     </button>
                     <button 
                       className={`tab-toggle-btn ${activeSidebarTab === 'ainotes' ? 'active' : ''}`}
                       onClick={() => setActiveSidebarTab('ainotes')}
                     >
-                      🤖 AI Notes
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 0 1 7.54 16.59c-.24.25-.36.59-.36.93v1.64c0 .46-.37.84-.83.84H7.66A.83.83 0 0 1 6.83 21v-1.64c0-.34-.12-.68-.36-.93A10 10 0 0 1 12 2z"/><line x1="9" y1="22" x2="15" y2="22"/></svg> AI Notes</span>
                     </button>
                     <button className="sidebar-close-btn" onClick={() => setShowSidebar(false)} aria-label="Close sidebar">
                       ✕

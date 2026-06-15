@@ -13,6 +13,7 @@ router.use(authenticateJWT);
 router.post('/', meetingController.createMeeting);
 router.get('/', meetingController.getMyMeetings);
 router.get('/:id', meetingController.getMeetingDetails);
+router.post('/:id/join', meetingController.joinMeeting);
 router.put('/:id', meetingController.updateMeeting);
 router.delete('/:id', meetingController.deleteMeeting);
 router.post('/:id/summarize', meetingController.summarizeActiveMeeting);

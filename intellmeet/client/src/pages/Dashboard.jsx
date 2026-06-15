@@ -23,6 +23,15 @@ export default function Dashboard({ onNavigate, user }) {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Notifications state
+  const [notifications, setNotifications] = useState([]);
+
+  // Join meeting modal states
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [joinMeetingId, setJoinMeetingId] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
+  const [joinError, setJoinError] = useState('');
+
   // Recording upload modal states
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadTitle, setUploadTitle] = useState('');
@@ -112,6 +121,75 @@ export default function Dashboard({ onNavigate, user }) {
       setError('Could not retrieve meetings from database.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await api.get('/notifications');
+      if (response.success && response.data.notifications) {
+        setNotifications(response.data.notifications);
+      }
+    } catch (err) {
+      console.error('Failed to load notifications', err);
+    }
+  };
+
+  const handleMarkNotificationRead = async (id) => {
+    try {
+      const response = await api.put(`/notifications/${id}/read`);
+      if (response.success) {
+        setNotifications(prev => prev.map(n => (n._id === id || n.id === id) ? { ...n, read: true } : n));
+      }
+    } catch (err) {
+      console.error('Failed to mark notification as read', err);
+    }
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    try {
+      const response = await api.put('/notifications/read-all');
+      if (response.success) {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      }
+    } catch (err) {
+      console.error('Failed to mark all notifications as read', err);
+    }
+  };
+
+  const handleDeleteNotification = async (id) => {
+    try {
+      const response = await api.delete(`/notifications/${id}`);
+      if (response.success) {
+        setNotifications(prev => prev.filter(n => n._id !== id && n.id !== id));
+      }
+    } catch (err) {
+      console.error('Failed to delete notification', err);
+    }
+  };
+
+  const handleJoinMeetingSubmit = async (e) => {
+    e.preventDefault();
+    setJoinError('');
+    if (!joinMeetingId.trim()) {
+      setJoinError('Meeting ID is required.');
+      return;
+    }
+    setIsJoining(true);
+    try {
+      const response = await api.post(`/meetings/${joinMeetingId.trim()}/join`);
+      if (response.success && response.data.meeting) {
+        setIsJoinModalOpen(false);
+        setJoinMeetingId('');
+        onNavigate('lobby', response.data.meeting);
+      } else {
+        setJoinError('Failed to join meeting.');
+      }
+    } catch (err) {
+      console.error(err);
+      setJoinError(err.message || 'Failed to join meeting. Please check the ID.');
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -294,9 +372,16 @@ export default function Dashboard({ onNavigate, user }) {
       fetchUserSettings();
       fetchProfile();
       fetchSessions();
+      fetchNotifications();
     }, 0);
     return () => clearTimeout(timer);
   }, [currentTab]);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 8000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Apply Appearance Preferences to document root
   useEffect(() => {
@@ -668,6 +753,9 @@ export default function Dashboard({ onNavigate, user }) {
     <div className="dashboard-layout">
       {/* Dynamic Embedded Styles for Premium Aesthetics */}
       <style>{`
+        .quick-actions-grid {
+          grid-template-columns: repeat(4, 1fr) !important;
+        }
         .completed-text {
           text-decoration: line-through;
           opacity: 0.5;
@@ -719,6 +807,10 @@ export default function Dashboard({ onNavigate, user }) {
           onLogout={() => setShowLogoutModal(true)} 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          notifications={notifications}
+          onMarkNotificationRead={handleMarkNotificationRead}
+          onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+          onDeleteNotification={handleDeleteNotification}
         />
         
         {/* TAB SWITCHER */}
@@ -735,17 +827,30 @@ export default function Dashboard({ onNavigate, user }) {
             {/* Quick Action Grid */}
             <div className="quick-actions-grid">
               <div className="action-card active-blue" onClick={handleStartInstantMeeting}>
-                <div className="action-icon">🎥</div>
+                <div className="action-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                </div>
                 <h3>Start Meeting</h3>
                 <p>Launch instant room call</p>
               </div>
               <div className="action-card" onClick={handleScheduleCall}>
-                <div className="action-icon">📅</div>
+                <div className="action-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
                 <h3>Schedule Call</h3>
                 <p>Book future meeting sprint</p>
               </div>
+              <div className="action-card" onClick={() => setIsJoinModalOpen(true)}>
+                <div className="action-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                </div>
+                <h3>Join Meeting</h3>
+                <p>Join call via room code</p>
+              </div>
               <div className="action-card" onClick={() => setIsUploadModalOpen(true)}>
-                <div className="action-icon">☁️</div>
+                <div className="action-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.2 15c.9-1 .9-2.6 0-3.6-.3-.3-.7-.5-1.2-.6C19.7 7.4 16.2 5 12 5c-4 0-7.3 2.2-7.8 5.4C2 11 1 12.8 1 15c0 2.8 2.2 5 5 5h13c2.2 0 4-1.8 4-4z"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+                </div>
                 <h3>Upload Recording</h3>
                 <p>Extract AI notes from MP4</p>
               </div>
@@ -758,8 +863,14 @@ export default function Dashboard({ onNavigate, user }) {
                 {/* Upcoming Meetings Card */}
                 <div className="widget-card">
                   <div className="widget-header">
-                    <h2>📅 Upcoming Meetings</h2>
-                    <span className="header-link" onClick={fetchMeetings}>🔄 Refresh</span>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      Upcoming Meetings
+                    </h2>
+                    <span className="header-link" onClick={fetchMeetings} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                      Refresh
+                    </span>
                   </div>
                   
                   {loading ? (
@@ -818,7 +929,10 @@ export default function Dashboard({ onNavigate, user }) {
                 {/* Recent Meetings Card */}
                 <div className="widget-card">
                   <div className="widget-header">
-                    <h2>🎥 Recent Meetings</h2>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                      Recent Meetings
+                    </h2>
                     <span className="header-badge">History</span>
                   </div>
                   
@@ -863,7 +977,10 @@ export default function Dashboard({ onNavigate, user }) {
               <div className="widgets-right-col">
                 <div className="widget-card ai-summary-widget">
                   <div className="widget-header">
-                    <h2>🤖 AI Summaries Widget</h2>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 0 1 7.54 16.59c-.24.25-.36.59-.36.93v1.64c0 .46-.37.84-.83.84H7.66A.83.83 0 0 1 6.83 21v-1.64c0-.34-.12-.68-.36-.93A10 10 0 0 1 12 2z"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
+                      AI Summaries Widget
+                    </h2>
                     <span className="header-badge">GPT-4o</span>
                   </div>
                   
@@ -874,7 +991,10 @@ export default function Dashboard({ onNavigate, user }) {
                         <p>{currentSummaryItem.summary || "No summary compiled for this meeting session."}</p>
                       </div>
                       <div className="action-items-list">
-                        <h4>✅ Key Action Items</h4>
+                        <h4 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981' }}><polyline points="20 6 9 17 4 12"/></svg>
+                          Key Action Items
+                        </h4>
                         {currentSummaryItem.actionItems && currentSummaryItem.actionItems.length > 0 ? (
                           currentSummaryItem.actionItems.map((item, idx) => (
                             <div className="action-item-check" key={item._id || idx}>
@@ -928,7 +1048,10 @@ export default function Dashboard({ onNavigate, user }) {
             <div className="widget-card">
               <div className="widget-header">
                 <h2>All Database Sessions ({filteredMeetings.length})</h2>
-                <span className="header-link" onClick={fetchMeetings}>🔄 Refresh</span>
+                <span className="header-link" onClick={fetchMeetings} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                  Refresh
+                </span>
               </div>
               
               {loading ? (
@@ -984,7 +1107,7 @@ export default function Dashboard({ onNavigate, user }) {
                                 }}
                                 className="btn-modal-cancel"
                               >
-                                ✏️ Edit
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
                               </button>
                               <button 
                                 onClick={() => handleDeleteMeetingClick(m._id || m.id)}
@@ -1003,15 +1126,15 @@ export default function Dashboard({ onNavigate, user }) {
                                 }}
                                 className="btn-modal-cancel"
                               >
-                                🗑️ Delete
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Delete
                               </button>
                             </div>
                           )}
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-light)', paddingTop: '12px', marginTop: 'auto' }}>
-                          <span style={{ fontSize: '12px', opacity: 0.8 }}>
-                            👤 Host: {m.host?.name || "Admin"}
+                          <span style={{ fontSize: '12px', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Host: {m.host?.name || "Admin"}
                           </span>
                           {!isCompleted ? (
                             m.status === 'ACTIVE' ? (
@@ -1068,7 +1191,10 @@ export default function Dashboard({ onNavigate, user }) {
               {/* Left Column: Meetings History Selector */}
               <div className="widget-card" style={{ height: 'max-content' }}>
                 <div className="widget-header">
-                  <h2>🎥 Sessions History</h2>
+                  <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                    Sessions History
+                  </h2>
                   <span className="header-badge">Completed</span>
                 </div>
                 {recentMeetings.length === 0 ? (
@@ -1103,24 +1229,24 @@ export default function Dashboard({ onNavigate, user }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '20px' }}>
                       <div>
                         <h2 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-main)' }}>{currentSummaryItem.title}</h2>
-                        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                          🕒 Collaborated on: {new Date(currentSummaryItem.startTime).toLocaleString()}
+                        <span style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Collaborated on: {new Date(currentSummaryItem.startTime).toLocaleString()}
                         </span>
                       </div>
                       <span className="header-badge" style={{ fontSize: '11px', padding: '4px 10px' }}>GPT-4o Summarized</span>
                     </div>
 
                     {/* Quick Specs */}
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-alt)', padding: '14px', borderRadius: '6px', fontSize: '13px' }}>
-                      <div>👤 <strong>Host:</strong> {currentSummaryItem.host?.name || "IntellMeet Admin"}</div>
-                      <div>👥 <strong>Role:</strong> Administrator</div>
-                      <div>🔗 <strong>State:</strong> Persistent MongoDB Atlas</div>
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-alt)', padding: '14px', borderRadius: '6px', fontSize: '13px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>Host:</strong> {currentSummaryItem.host?.name || "IntellMeet Admin"}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> <strong>Role:</strong> Administrator</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> <strong>State:</strong> Persistent MongoDB Atlas</div>
                     </div>
 
                     {/* AI SUMMARY BLOCK */}
                     <div style={{ marginBottom: '28px' }}>
                       <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>🤖</span> Dynamic AI Summary
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 0 1 7.54 16.59c-.24.25-.36.59-.36.93v1.64c0 .46-.37.84-.83.84H7.66A.83.83 0 0 1 6.83 21v-1.64c0-.34-.12-.68-.36-.93A10 10 0 0 1 12 2z"/><line x1="9" y1="22" x2="15" y2="22"/></svg> Dynamic AI Summary
                       </h3>
                       <div className="summary-section-box" style={{ fontSize: '14px', padding: '16px', backgroundColor: 'var(--bg-alt)' }}>
                         <p>{currentSummaryItem.summary || "No summary was compiled for this meeting session."}</p>
@@ -1131,7 +1257,7 @@ export default function Dashboard({ onNavigate, user }) {
                     {currentSummaryItem.keyDiscussionPoints && currentSummaryItem.keyDiscussionPoints.length > 0 && (
                       <div style={{ marginBottom: '28px' }}>
                         <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span>🗣️</span> Key Discussion Points
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Key Discussion Points
                         </h3>
                         <div className="summary-section-box" style={{ fontSize: '14px', padding: '16px', backgroundColor: 'var(--bg-alt)' }}>
                           <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1146,7 +1272,7 @@ export default function Dashboard({ onNavigate, user }) {
                     {/* ACTION ITEMS BLOCK */}
                     <div style={{ marginBottom: '28px' }}>
                       <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>✅</span> Key Action Items Checklist
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981' }}><polyline points="20 6 9 17 4 12"/></svg> Key Action Items Checklist
                       </h3>
                       <div style={{ backgroundColor: 'white', border: '1px solid var(--border-light)', borderRadius: '6px', padding: '16px' }}>
                         {currentSummaryItem.actionItems && currentSummaryItem.actionItems.length > 0 ? (
@@ -1181,11 +1307,14 @@ export default function Dashboard({ onNavigate, user }) {
                                       padding: '3px 8px', 
                                       cursor: 'pointer',
                                       fontWeight: '600',
-                                      transition: 'all 0.2s'
+                                      transition: 'all 0.2s',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px'
                                     }}
                                     className="btn-convert-action-item"
                                   >
-                                    📋 Add to Board
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Add to Board
                                   </button>
                                 </div>
                               </label>
@@ -1200,7 +1329,7 @@ export default function Dashboard({ onNavigate, user }) {
                     {/* TRANSCRIPT BLOCK */}
                     <div>
                       <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>🎙️</span> High-Fidelity Transcript Logs
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> High-Fidelity Transcript Logs
                       </h3>
                       <div style={{ 
                         backgroundColor: '#0f172a', 
@@ -1260,56 +1389,56 @@ export default function Dashboard({ onNavigate, user }) {
                     className={`settings-nav-btn ${settingsTab === 'profile' ? 'active' : ''}`}
                     onClick={() => setSettingsTab('profile')}
                   >
-                    <span className="nav-icon">👤</span> Profile
+                    <span className="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span> Profile
                   </button>
                   <button 
                     type="button"
                     className={`settings-nav-btn ${settingsTab === 'account' ? 'active' : ''}`}
                     onClick={() => setSettingsTab('account')}
                   >
-                    <span className="nav-icon">🔑</span> Account
+                    <span className="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.778-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span> Account
                   </button>
                   <button 
                     type="button"
                     className={`settings-nav-btn ${settingsTab === 'notifications' ? 'active' : ''}`}
                     onClick={() => setSettingsTab('notifications')}
                   >
-                    <span className="nav-icon">🔔</span> Notifications
+                    <span className="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span> Notifications
                   </button>
                   <button 
                     type="button"
                     className={`settings-nav-btn ${settingsTab === 'appearance' ? 'active' : ''}`}
                     onClick={() => setSettingsTab('appearance')}
                   >
-                    <span className="nav-icon">🎨</span> Appearance
+                    <span className="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22C17.52 22 22 17.52 22 12S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10zm0-18a8 8 0 1 1 0 16 8 8 0 0 1 0-16z"/><circle cx="7.5" cy="10.5" r="1.5"/><circle cx="11.5" cy="7.5" r="1.5"/><circle cx="16.5" cy="9.5" r="1.5"/><circle cx="15.5" cy="14.5" r="1.5"/></svg></span> Appearance
                   </button>
                   <button 
                     type="button"
                     className={`settings-nav-btn ${settingsTab === 'meeting' ? 'active' : ''}`}
                     onClick={() => setSettingsTab('meeting')}
                   >
-                    <span className="nav-icon">🎥</span> Meeting Prefs
+                    <span className="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span> Meeting Prefs
                   </button>
                   <button 
                     type="button"
                     className={`settings-nav-btn ${settingsTab === 'ai' ? 'active' : ''}`}
                     onClick={() => setSettingsTab('ai')}
                   >
-                    <span className="nav-icon">🧠</span> AI Prefs
+                    <span className="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-4.12 2.5 2.5 0 0 1 0-4.12A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-4.12 2.5 2.5 0 0 0 0-4.12A2.5 2.5 0 0 0 14.5 2z"/></svg></span> AI Prefs
                   </button>
                   <button 
                     type="button"
                     className={`settings-nav-btn ${settingsTab === 'security' ? 'active' : ''}`}
                     onClick={() => setSettingsTab('security')}
                   >
-                    <span className="nav-icon">🛡️</span> Security
+                    <span className="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span> Security
                   </button>
                   <button 
                     type="button"
                     className={`settings-nav-btn ${settingsTab === 'workspace' ? 'active' : ''}`}
                     onClick={() => setSettingsTab('workspace')}
                   >
-                    <span className="nav-icon">💼</span> Workspace
+                    <span className="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span> Workspace
                   </button>
                 </nav>
               </aside>
@@ -1460,7 +1589,7 @@ export default function Dashboard({ onNavigate, user }) {
         <div className="modal-overlay">
           <div className="modal-card" style={{ maxWidth: '520px' }}>
             <h3 style={{ fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span>☁️</span> Upload meeting recording
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}><path d="M21.2 15c.9-1 .9-2.6 0-3.6-.3-.3-.7-.5-1.2-.6C19.7 7.4 16.2 5 12 5c-4 0-7.3 2.2-7.8 5.4C2 11 1 12.8 1 15c0 2.8 2.2 5 5 5h13c2.2 0 4-1.8 4-4z"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg> Upload meeting recording
             </h3>
             <p>Upload your video or audio recording files (.mp4, .m4a, .mp3) to compile high-fidelity transcripts, summaries, and action checklists with GPT-4o intelligence.</p>
             
@@ -1567,7 +1696,7 @@ export default function Dashboard({ onNavigate, user }) {
         <div className="modal-overlay">
           <div className="modal-card" style={{ maxWidth: '520px', width: '90%' }}>
             <h3 style={{ fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <span>📅</span> {editingMeetingId ? 'Reschedule Meeting' : 'Schedule a New Meeting'}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> {editingMeetingId ? 'Reschedule Meeting' : 'Schedule a New Meeting'}
             </h3>
             
             {scheduleError && (
@@ -1653,10 +1782,56 @@ export default function Dashboard({ onNavigate, user }) {
         </div>
       )}
 
+      {/* JOIN MEETING MODAL */}
+      {isJoinModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '440px', width: '90%' }}>
+            <h3 style={{ fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Join Meeting
+            </h3>
+            
+            {joinError && (
+              <div style={{ color: '#ef4444', backgroundColor: '#fef2f2', padding: '10px 14px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px', fontWeight: '500' }}>
+                {joinError}
+              </div>
+            )}
+            
+            <form onSubmit={handleJoinMeetingSubmit}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: 'var(--text-main)' }}>Meeting Room ID *</label>
+                <input 
+                  type="text" 
+                  value={joinMeetingId}
+                  onChange={(e) => setJoinMeetingId(e.target.value)}
+                  required
+                  placeholder="Enter 24-character MongoDB ID"
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '14px' }}
+                />
+              </div>
+
+              <div className="modal-buttons">
+                <button type="button" className="btn-modal-cancel" onClick={() => { setIsJoinModalOpen(false); setJoinMeetingId(''); setJoinError(''); }} disabled={isJoining}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-modal-logout" style={{ backgroundColor: 'var(--primary)', border: 'none' }} disabled={isJoining}>
+                  {isJoining ? 'Joining...' : 'Join Call'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Toast Alert */}
       {toastMessage && (
         <div className={`settings-toast ${toastType}`}>
-          <span className="toast-icon">{toastType === 'success' ? '✅' : '❌'}</span>
+          <span className="toast-icon">
+            {toastType === 'success' ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981' }}><polyline points="20 6 9 17 4 12"/></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ef4444' }}><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            )}
+          </span>
           <span className="toast-text">{toastMessage}</span>
         </div>
       )}

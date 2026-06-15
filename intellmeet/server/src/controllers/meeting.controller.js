@@ -1,6 +1,7 @@
 import * as meetingService from '../services/meeting.service.js';
 import aiService from '../services/ai.service.js';
 import AppError from '../utils/AppError.js';
+import * as notificationService from '../services/notification.service.js';
 
 /**
  * Create a new meeting room session
@@ -26,6 +27,13 @@ export const createMeeting = async (req, res, next) => {
       scheduledDate,
       scheduledTime,
       duration
+    });
+
+    await notificationService.createNotification({
+      userId: hostId,
+      type: 'MEETING_INVITE',
+      title: 'Meeting Scheduled',
+      message: `Meeting "${title}" has been successfully scheduled.`
     });
 
     res.status(201).json({
@@ -225,6 +233,53 @@ export const summarizeActiveMeeting = async (req, res, next) => {
         keyDiscussionPoints: updated.keyDiscussionPoints,
         actionItems: updated.actionItems
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Join meeting room as a participant
+ * POST /api/meetings/:id/join
+ */
+export const joinMeeting = async (req, res, next) => {
+  try {
+    const meetingId = req.params.id;
+    const userId = req.user._id || req.user.id;
+
+    // Fetch the meeting details first (without BOLA checks on this specific route, since we are adding the user to the meeting)
+    const meeting = await meetingService.getMeetingById(meetingId);
+    
+    // Add user as participant if not already host or participant
+    const hostId = meeting.host._id || meeting.host;
+    const isHost = hostId.toString() === userId.toString();
+    const isParticipant = meeting.participants && meeting.participants.some(p => {
+      const pId = p._id || p;
+      return pId.toString() === userId.toString();
+    });
+
+    if (!isHost && !isParticipant) {
+      await meetingService.addParticipant(meetingId, userId);
+    }
+
+    // Fetch refreshed details
+    const updatedMeeting = await meetingService.getMeetingById(meetingId);
+
+    // Trigger notification to host
+    if (!isHost) {
+      await notificationService.createNotification({
+        userId: hostId,
+        type: 'MEETING_INVITE',
+        title: 'User Joined Call',
+        message: `${req.user.name} has joined your meeting "${meeting.title}".`
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Successfully joined meeting.',
+      data: { meeting: updatedMeeting }
     });
   } catch (error) {
     next(error);

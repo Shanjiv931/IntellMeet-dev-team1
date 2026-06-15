@@ -8,6 +8,7 @@ import meetingRoutes from './routes/meeting.routes.js';
 import taskRoutes from './routes/task.routes.js';
 import userRoutes from './routes/user.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 import errorMiddleware from './middleware/error.middleware.js';
 import AppError from './utils/AppError.js';
 import { apiRateLimiter } from './middleware/rateLimit.middleware.js';
@@ -82,6 +83,9 @@ app.use('/api/users', userRoutes);
 
 // Register Core Analytics Routes
 app.use('/api/analytics', analyticsRoutes);
+
+// Register Core Notifications Routes
+app.use('/api/notifications', notificationRoutes);
 
 // Fallback Route Handler for undefined endpoints
 app.all('*', (req, res, next) => {

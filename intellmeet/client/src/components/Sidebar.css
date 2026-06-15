@@ -52,8 +52,11 @@
   font-weight: 600;
 }
 
-.sidebar-icon {
-  font-size: 18px;
+.sidebar-icon-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
 }
 
 

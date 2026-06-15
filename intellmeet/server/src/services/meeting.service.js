@@ -238,3 +238,41 @@ export const updateMeetingSummaryInternal = async (meetingId, summaryData) => {
   return updatedMeeting;
 };
 
+/**
+ * Add a participant to a meeting
+ */
+export const addParticipant = async (meetingId, userId) => {
+  if (isDBConnected()) {
+    try {
+      return await Meeting.findByIdAndUpdate(
+        meetingId,
+        { $addToSet: { participants: userId } },
+        { new: true }
+      );
+    } catch (err) {
+      logger.error('Mongoose addParticipant error:', err);
+      throw new AppError('Failed to add participant to meeting.', 500);
+    }
+  }
+
+  // Memory fallback query
+  const index = memoryStore.meetings.findIndex(m => m._id.toString() === meetingId.toString());
+  if (index === -1) {
+    throw new AppError('Meeting not found in-memory.', 404);
+  }
+
+  const meeting = memoryStore.meetings[index];
+  if (!meeting.participants) {
+    meeting.participants = [];
+  }
+  
+  const stringId = userId.toString();
+  if (!meeting.participants.some(p => p.toString() === stringId)) {
+    meeting.participants.push(userId);
+  }
+  
+  meeting.updatedAt = new Date();
+  logger.info(`Resilient DB Fallback: Added participant in-memory to meeting: ${meetingId}`);
+  return meeting;
+};
+
