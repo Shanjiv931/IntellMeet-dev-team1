@@ -629,7 +629,7 @@ When a meeting is launched, participants can easily invite others by copying the
 * **How to Join**: Others can paste this code into the **Join Meeting Modal** on the main Dashboard to immediately enter the active call.
 
 ### 2. Live Transcript History Feed
-* **AI engine**: Summaries and task extractions are powered by the **Google Gemini 1.5 Flash** (`gemini-1.5-flash`) API.
+* **AI engine**: Summaries and task extractions are powered by the **Groq Llama 3.3 70B** (`llama-3.3-70b-versatile`) API.
 * **Real-time Visualization**: To see the transcription as it happens, open the **AI Notes** tab in the sidebar. A scrollable "Live Transcript Feed" displays parsed phrases as you speak, showing the speaker's name and message, and automatically scrolls to the bottom to follow the conversation.
 
 ---
@@ -673,6 +673,7 @@ When a meeting is launched, participants can easily invite others by copying the
 | `JWT_SECRET` | Yes | Access token signing secret | *Alphanumeric key* |
 | `JWT_REFRESH_SECRET` | Yes | Refresh token signing secret | *Alphanumeric key* |
 | `CLIENT_URL` | Yes | Allowed CORS frontend origin | `https://intellmeet.vercel.app` |
+| `GROQ_API_KEY` | Yes | API key for Llama 3 summaries | `gsk_Oa7...` |
 | `SENTRY_DSN` | No | Sentry monitoring endpoint | `https://examplePublicKey@o0.ingest.sentry.io/0` |
 | `VITE_SENTRY_DSN` | No | Frontend Sentry endpoint | `https://examplePublicKey@o0.ingest.sentry.io/0` |
 | `REDIS_URL` | No | TLS Redis cache link | `rediss://default:token@cluster.upstash.io:6379` |
