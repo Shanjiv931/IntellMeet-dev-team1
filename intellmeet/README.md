@@ -95,6 +95,9 @@ graph TD
 | *Database* | MongoDB + Mongoose | Highly flexible document models for meetings, tasks, and action lists. | PostgreSQL (rejected due to strict schema overhead). |
 | *Real-Time Gateway*| Socket.io + WebRTC | Industry-standard low-latency P2P media connections and bidirectional events. | WebRTC peerjs / raw WebSockets. |
 | *Cache Layer* | Redis | TLS-enabled key-value synchronization for production caching. | Memory Cache (retained as local offline fallback). |
+| *AI Intelligence* | Groq API (Llama 3.3 70B) | High-throughput, low-latency meeting intelligence summaries and action items extraction. | Google Gemini 1.5 Flash / OpenAI GPT-4o (migrated to Groq for higher limits and sub-second execution speeds). |
+| *Observability / APM* | Sentry (v8 SDKs) | Full stack code-level exception logging, runtime tracing, and privacy-safe user session replay logs. | LogRocket / Loggly (rejected due to Sentry's superior React 19 compatibility and native OpenTelemetry integration). |
+| *Metrics & Dashboards* | Prometheus + Grafana | High-precision time-series metrics collection, process telemetry, and visual system health dashboarding. | Datadog / New Relic (rejected to prevent SaaS vendor lock-in and keep metrics open-source). |
 | **Orchestration** | Kubernetes + Helm | High availability, auto-scaling deployment pods, and clean package updates. | Docker Compose alone (retained for local development). |
 
 ---
@@ -620,7 +623,7 @@ Once Grafana is running and connected to Prometheus, you can explore live metric
 
 ---
 
-## 🔗 Invite Codes & Live Transcription Details
+## 🔗 Invite Codes, Live Transcription & Meeting Completion Details
 
 ### 1. Copyable Meeting Codes
 When a meeting is launched, participants can easily invite others by copying the unique join code from the room interface.
@@ -631,6 +634,11 @@ When a meeting is launched, participants can easily invite others by copying the
 ### 2. Live Transcript History Feed
 * **AI engine**: Summaries and task extractions are powered by the **Groq Llama 3.3 70B** (`llama-3.3-70b-versatile`) API.
 * **Real-time Visualization**: To see the transcription as it happens, open the **AI Notes** tab in the sidebar. A scrollable "Live Transcript Feed" displays parsed phrases as you speak, showing the speaker's name and message, and automatically scrolls to the bottom to follow the conversation.
+
+### 3. Seamless Meeting Completion & Live Duration
+* **Async Completion Await**: Refactored the meeting leave flow to be asynchronous. The client awaits status updates and Groq summary compilation before navigating to the dashboard, preventing race conditions.
+* **Precision Duration Math**: The backend dynamically calculates the exact live duration of the call (minutes elapsed between activation start time and hangup end time) upon completion, persisting it to the database.
+* **Intelligent Auto-Focus**: Automatically focuses the **AI Summaries** (History) tab and pre-selects the completed meeting details (executive summary, transcripts, and checklist tasks) upon redirected landing.
 
 ---
 

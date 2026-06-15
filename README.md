@@ -95,6 +95,9 @@ graph TD
 | *Database* | MongoDB + Mongoose | Highly flexible document models for meetings, tasks, and action lists. | PostgreSQL (rejected due to strict schema overhead). |
 | *Real-Time Gateway*| Socket.io + WebRTC | Industry-standard low-latency P2P media connections and bidirectional events. | WebRTC peerjs / raw WebSockets. |
 | *Cache Layer* | Redis | TLS-enabled key-value synchronization for production caching. | Memory Cache (retained as local offline fallback). |
+| *AI Intelligence* | Groq API (Llama 3.3 70B) | High-throughput, low-latency meeting intelligence summaries and action items extraction. | Google Gemini 1.5 Flash / OpenAI GPT-4o (migrated to Groq for higher limits and sub-second execution speeds). |
+| *Observability / APM* | Sentry (v8 SDKs) | Full stack code-level exception logging, runtime tracing, and privacy-safe user session replay logs. | LogRocket / Loggly (rejected due to Sentry's superior React 19 compatibility and native OpenTelemetry integration). |
+| *Metrics & Dashboards* | Prometheus + Grafana | High-precision time-series metrics collection, process telemetry, and visual system health dashboarding. | Datadog / New Relic (rejected to prevent SaaS vendor lock-in and keep metrics open-source). |
 | **Orchestration** | Kubernetes + Helm | High availability, auto-scaling deployment pods, and clean package updates. | Docker Compose alone (retained for local development). |
 
 ---
@@ -512,6 +515,133 @@ IntellMeet is hardened against modern web application security threats:
 
 ---
 
+## 📊 Observability & Live Monitoring Stack
+
+IntellMeet integrates a production-grade observability stack comprising **Prometheus**, **Grafana**, and **Sentry** to monitor API performance, track latency budgets, and log runtime errors in real-time.
+
+```mermaid
+graph LR
+    subgraph "Application Cluster"
+        NodeApp["Node.js Express Backend"]
+        ReactApp["React 19 Frontend Client"]
+    end
+
+    subgraph "Observability Layer (monitoring Namespace)"
+        PromServer["Prometheus Server (TSDB)"]
+        GrafanaDash["Grafana Visualisation"]
+    end
+
+    subgraph "External Cloud"
+        SentryCloud["Sentry SaaS Dashboard"]
+    end
+
+    ReactApp -->|Capture render crashes & sessions| SentryCloud
+    NodeApp -->|Capture uncaught exceptions & route errors| SentryCloud
+    NodeApp -->|Exposes HTTP & runtime metrics| NodeApp
+    PromServer -->|Scrapes /metrics endpoint| NodeApp
+    GrafanaDash -->|Queries data| PromServer
+```
+
+### 1. Prometheus Metrics Endpoint
+* **Path**: `/metrics` (registered before auth and rate limiters to guarantee scraping uptime).
+* **Metrics Tracked**:
+  * Default system process metrics (CPU load, memory footprints, event loop lag, and GC cycles).
+  * `http_requests_total`: Total count of HTTP requests labeled by `method`, `route`, and status `status`.
+  * `http_request_duration_seconds`: Histogram of request response times.
+* **Low Cardinality Normalization**: The metrics middleware automatically replaces resource hashes and MongoDB IDs with wildcard placeholders (e.g. `/api/meetings/60d5...` becomes `/api/meetings/:id`) to prevent metrics database bloat.
+
+### 2. Sentry Error & Session Tracking
+* **Backend (`@sentry/node` v8)**: Loaded at the absolute top of the entrypoint file to intercept all imports. Employs OpenTelemetry-based auto-instrumentation and catches all unhandled routing exceptions using `Sentry.setupExpressErrorHandler(app)`.
+* **Frontend (`@sentry/react` v8)**: Captures uncaught React render crashes, tracks routing latency, and records session replays (10% standard, 100% on error events). Includes an custom dark-themed Error Boundary overlay for clean user recovery.
+
+### 3. How to Open the Live Monitoring Dashboards
+
+#### Accessing Raw Metrics
+You can query the raw Prometheus scrape logs directly from the backend server endpoint:
+`https://intellmeet-backend-5j5a.onrender.com/metrics` (or `http://localhost:8080/metrics` locally).
+
+#### Option A: Running Locally via Docker Compose (100% Free)
+If you have Docker installed, you can launch the pre-configured local monitoring stack:
+1. **Run the compose file**:
+   ```bash
+   docker compose -f intellmeet/docker-compose.monitoring.yml up -d
+   ```
+2. **Access Prometheus**: Navigate to `http://localhost:9090`.
+3. **Access Grafana**: Navigate to `http://localhost:3000` (Login: `admin` / `admin`).
+4. **Configure Datasource**: Add a Prometheus datasource pointing to `http://host.docker.internal:9090`.
+
+#### Option B: Running Locally via Windows Binaries (100% Free & No Docker Required)
+If you do not have Docker installed, you can run the native Windows executable files:
+1. **Configure & Run Prometheus**:
+   * Download the Windows zip from the [Prometheus Download Page](https://prometheus.io/download/).
+   * Extract it and replace the default `prometheus.yml` inside the extracted folder with the [prometheus.yml](file:///c:/Users/Shanjivkkumar/Downloads/IntellMeet-dev/intellmeet/prometheus/prometheus.yml) file from this repo.
+   * Double-click `prometheus.exe` to start scraping. Open `http://localhost:9090` to verify.
+2. **Install & Run Grafana**:
+   * Download the **Windows Installer (64 Bit) MSI** from the [Grafana Download Page](https://grafana.com/grafana/download?platform=windows) and run it.
+   * Open `http://localhost:3000` (Login: `admin` / `admin`).
+   * Add a Prometheus datasource pointing to `http://localhost:9090` and save.
+
+#### Option C: Launching Prometheus & Grafana in Kubernetes
+All observability resources are compiled inside [k8s/monitoring.yaml](file:///c:/Users/Shanjivkkumar/Downloads/IntellMeet-dev/intellmeet/k8s/monitoring.yaml).
+1. **Apply the manifests**:
+   ```bash
+   kubectl apply -f intellmeet/k8s/monitoring.yaml
+   ```
+2. **Access Prometheus & Grafana**:
+   * Port-forward Prometheus:
+     ```bash
+     kubectl port-forward svc/prometheus-service 9090:9090 -n monitoring
+     ```
+   * Port-forward Grafana:
+     ```bash
+     kubectl port-forward svc/grafana-service 3000:3000 -n monitoring
+     ```
+   * Configure Prometheus datasource pointing to `http://prometheus-service.monitoring.svc.cluster.local:9090`.
+
+#### Accessing Sentry logs & Error Tracking
+Sentry serves a distinct role compared to Prometheus & Grafana:
+* **Prometheus & Grafana** track **numerical metrics over time** (e.g., event counters, CPU usage, RAM footprint, and endpoint latency budgets) to see *if* things are running slowly or under high load.
+* **Sentry** captures **code-level exceptions, UI crashes, and runtime errors** to tell you *exactly what line of code broke and why*.
+
+##### Sentry Features for IntellMeet:
+1. **Error Diagnostics**: If a backend route throws a database query error or the React UI experiences a component rendering crash, Sentry logs the error along with the complete file path, function name, and line number.
+2. **Session Replay**: Captures privacy-safe, video-like recordings of user actions leading up to a crash, showing exactly what they clicked and hovered on.
+3. **Real-time Alerting**: Instantly alerts developers via email or Slack when a new error occurs in production.
+
+To access your logged errors, navigate to **`sentry.io`**, log in, and view your linked `intellmeet-backend` and `intellmeet-frontend` project dashboards.
+
+#### Querying & Visualizing Metrics in Grafana
+Once Grafana is running and connected to Prometheus, you can explore live metrics:
+1. Open the Grafana sidebar and click on the **Explore** compass icon.
+2. In the query editor box, select your Prometheus datasource and enter a query (e.g. `http_requests_total`).
+3. Click the blue **"Run query"** button (or press `Shift + Enter`) to view real-time performance graphs.
+4. **Key Metrics to Monitor**:
+   * `http_requests_total`: Total number of API requests parsed by method, route, and status.
+   * `http_request_duration_seconds`: Histogram of request processing times (verifying the <200ms NFR).
+   * `process_resident_memory_bytes`: Node.js server RAM utilization.
+   * `process_cpu_seconds_total`: Node.js server CPU load metrics.
+
+---
+
+## 🔗 Invite Codes, Live Transcription & Meeting Completion Details
+
+### 1. Copyable Meeting Codes
+When a meeting is launched, participants can easily invite others by copying the unique join code from the room interface.
+* **Header Badge**: A clean badge displays the code at the top left of the room.
+* **Interactive Copy Button**: Clicking the copy button copies the code to the clipboard, switching the icon to a green checkmark and showing a "Copied!" label for 2 seconds.
+* **How to Join**: Others can paste this code into the **Join Meeting Modal** on the main Dashboard to immediately enter the active call.
+
+### 2. Live Transcript History Feed
+* **AI engine**: Summaries and task extractions are powered by the **Groq Llama 3.3 70B** (`llama-3.3-70b-versatile`) API.
+* **Real-time Visualization**: To see the transcription as it happens, open the **AI Notes** tab in the sidebar. A scrollable "Live Transcript Feed" displays parsed phrases as you speak, showing the speaker's name and message, and automatically scrolls to the bottom to follow the conversation.
+
+### 3. Seamless Meeting Completion & Live Duration
+* **Async Completion Await**: Refactored the meeting leave flow to be asynchronous. The client awaits status updates and Groq summary compilation before navigating to the dashboard, preventing race conditions.
+* **Precision Duration Math**: The backend dynamically calculates the exact live duration of the call (minutes elapsed between activation start time and hangup end time) upon completion, persisting it to the database.
+* **Intelligent Auto-Focus**: Automatically focuses the **AI Summaries** (History) tab and pre-selects the completed meeting details (executive summary, transcripts, and checklist tasks) upon redirected landing.
+
+---
+
 ## 🚀 Deployment & Operations Guide
 
 ### Local Development Setup
@@ -551,6 +681,9 @@ IntellMeet is hardened against modern web application security threats:
 | `JWT_SECRET` | Yes | Access token signing secret | *Alphanumeric key* |
 | `JWT_REFRESH_SECRET` | Yes | Refresh token signing secret | *Alphanumeric key* |
 | `CLIENT_URL` | Yes | Allowed CORS frontend origin | `https://intellmeet.vercel.app` |
+| `GROQ_API_KEY` | Yes | API key for Llama 3 summaries | `gsk_Oa7...` |
+| `SENTRY_DSN` | No | Sentry monitoring endpoint | `https://examplePublicKey@o0.ingest.sentry.io/0` |
+| `VITE_SENTRY_DSN` | No | Frontend Sentry endpoint | `https://examplePublicKey@o0.ingest.sentry.io/0` |
 | `REDIS_URL` | No | TLS Redis cache link | `rediss://default:token@cluster.upstash.io:6379` |
 | `CLOUDINARY_URL`| No | Image CDN credentials | `cloudinary://api_key:secret@cloud_name` |
 
