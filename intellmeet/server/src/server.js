@@ -25,17 +25,21 @@ const server = http.createServer(app);
 initSocket(server);
 logger.info('Socket server initialized.');
 
-// Establish connection to MongoDB Atlas
-await connectDB();
-logger.info('MongoDB connected.');
-
-// Compile database collections and seed indexes on boot automatically
-await seedDatabaseSilent();
-
-// Listen on configured cloud port
+// Listen on configured cloud port immediately (non-blocking)
 const PORT = env.PORT;
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   logger.info(`Server running successfully on port ${PORT} [Mode: ${env.NODE_ENV}]`);
+
+  // Establish connection to MongoDB Atlas in the background
+  try {
+    await connectDB();
+    logger.info('MongoDB connection process finalized.');
+    
+    // Compile database collections and seed indexes on boot automatically once connected
+    await seedDatabaseSilent();
+  } catch (err) {
+    logger.error('MongoDB background connection failed:', err);
+  }
 });
 
 // Setup Unhandled Promise Rejection Handler
