@@ -1,3 +1,4 @@
+import dns from 'dns';
 import http from 'http';
 import app from './app.js';
 import env from './config/env.js';
@@ -5,6 +6,9 @@ import { connectDB, closeDB } from './config/db.js';
 import { seedDatabaseSilent } from './config/dbInit.js';
 import { initSocket } from './sockets/socket.server.js';
 import logger from './utils/logger.js';
+
+// Configure DNS to resolve SRV records on local environments
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 // Setup Uncaught Exception Handler
 process.on('uncaughtException', (error) => {
