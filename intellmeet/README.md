@@ -501,7 +501,7 @@ IntellMeet is hardened against modern web application security threats:
 * Day 20: Push notification indicators for assigned tasks.
 * Day 21: Week 3 Checkpoint: AI summarization quality verification and accuracy verification.
 
-### Week 4 – Deployment, Monitoring & Production Polish
+### Week 4 – Polish, Orchestration & Production Hardening
 * Day 22: Multi-stage `Dockerfiles` optimizing client and server containers.
 * Day 23: Helm chart package compilation and Kubernetes deployment pods manifests.
 * Day 24: GitHub Actions CI-CD YAML workflow construction for validation.
@@ -509,6 +509,96 @@ IntellMeet is hardened against modern web application security threats:
 * Day 26: Prometheus, Grafana, and Sentry hooks integration.
 * Day 27: Load testing, confirming sub-200ms latency.
 * Day 28: Final documentation compile and submission preparation.
+
+---
+
+## 📊 Observability & Live Monitoring Stack
+
+IntellMeet integrates a production-grade observability stack comprising **Prometheus**, **Grafana**, and **Sentry** to monitor API performance, track latency budgets, and log runtime errors in real-time.
+
+```mermaid
+graph LR
+    subgraph "Application Cluster"
+        NodeApp["Node.js Express Backend"]
+        ReactApp["React 19 Frontend Client"]
+    end
+
+    subgraph "Observability Layer (monitoring Namespace)"
+        PromServer["Prometheus Server (TSDB)"]
+        GrafanaDash["Grafana Visualisation"]
+    end
+
+    subgraph "External Cloud"
+        SentryCloud["Sentry SaaS Dashboard"]
+    end
+
+    ReactApp -->|Capture render crashes & sessions| SentryCloud
+    NodeApp -->|Capture uncaught exceptions & route errors| SentryCloud
+    NodeApp -->|Exposes HTTP & runtime metrics| NodeApp
+    PromServer -->|Scrapes /metrics endpoint| NodeApp
+    GrafanaDash -->|Queries data| PromServer
+```
+
+### 1. Prometheus Metrics Endpoint
+* **Path**: `/metrics` (registered before auth and rate limiters to guarantee scraping uptime).
+* **Metrics Tracked**:
+  * Default system process metrics (CPU load, memory footprints, event loop lag, and GC cycles).
+  * `http_requests_total`: Total count of HTTP requests labeled by `method`, `route`, and status `status`.
+  * `http_request_duration_seconds`: Histogram of request response times.
+* **Low Cardinality Normalization**: The metrics middleware automatically replaces resource hashes and MongoDB IDs with wildcard placeholders (e.g. `/api/meetings/60d5...` becomes `/api/meetings/:id`) to prevent metrics database bloat.
+
+### 2. Sentry Error & Session Tracking
+* **Backend (`@sentry/node` v8)**: Loaded at the absolute top of the entrypoint file to intercept all imports. Employs OpenTelemetry-based auto-instrumentation and catches all unhandled routing exceptions using `Sentry.setupExpressErrorHandler(app)`.
+* **Frontend (`@sentry/react` v8)**: Captures uncaught React render crashes, tracks routing latency, and records session replays (10% standard, 100% on error events). Includes an custom dark-themed Error Boundary overlay for clean user recovery.
+
+### 3. How to Open the Live Monitoring Dashboards
+
+#### Accessing Raw Metrics
+You can query the raw Prometheus scrape logs directly from the backend server endpoint:
+`https://intellmeet-backend-5j5a.onrender.com/metrics` (or `http://localhost:8080/metrics` locally).
+
+#### Launching Prometheus & Grafana in Kubernetes
+All observability resources are compiled inside [k8s/monitoring.yaml](file:///c:/Users/Shanjivkkumar/Downloads/IntellMeet-dev/intellmeet/k8s/monitoring.yaml).
+1. **Apply the manifests**:
+   ```bash
+   kubectl apply -f intellmeet/k8s/monitoring.yaml
+   ```
+2. **Access Prometheus**:
+   * Port-forward the service to your local machine:
+     ```bash
+     kubectl port-forward svc/prometheus-service 9090:9090 -n monitoring
+     ```
+   * Open **`http://localhost:9090`** in your browser.
+3. **Access Grafana**:
+   * Port-forward the service to your local machine:
+     ```bash
+     kubectl port-forward svc/grafana-service 3000:3000 -n monitoring
+     ```
+   * Open **`http://localhost:3000`** in your browser.
+   * **Default Login**: Username: `admin` | Password: `admin`
+4. **Configure Grafana Datasource**:
+   * Navigate to **Connections > Data Sources > Add Data Source**.
+   * Choose **Prometheus**.
+   * Set Connection URL to: `http://prometheus-service.monitoring.svc.cluster.local:9090`
+   * Click **Save & Test**.
+
+#### Accessing Sentry logs
+* Navigate to **`sentry.io`** and log in.
+* Select the IntellMeet project corresponding to your `SENTRY_DSN` variable to explore stack traces, CPU/memory performance curves, and Session Replay video recordings.
+
+---
+
+## 🔗 Invite Codes & Live Transcription Details
+
+### 1. Copyable Meeting Codes
+When a meeting is launched, participants can easily invite others by copying the unique join code from the room interface.
+* **Header Badge**: A clean badge displays the code at the top left of the room.
+* **Interactive Copy Button**: Clicking the copy button copies the code to the clipboard, switching the icon to a green checkmark and showing a "Copied!" label for 2 seconds.
+* **How to Join**: Others can paste this code into the **Join Meeting Modal** on the main Dashboard to immediately enter the active call.
+
+### 2. Live Transcript History Feed
+* **AI engine**: Summaries and task extractions are powered by the **Google Gemini 1.5 Flash** (`gemini-1.5-flash`) API.
+* **Real-time Visualization**: To see the transcription as it happens, open the **AI Notes** tab in the sidebar. A scrollable "Live Transcript Feed" displays parsed phrases as you speak, showing the speaker's name and message, and automatically scrolls to the bottom to follow the conversation.
 
 ---
 
@@ -551,6 +641,8 @@ IntellMeet is hardened against modern web application security threats:
 | `JWT_SECRET` | Yes | Access token signing secret | *Alphanumeric key* |
 | `JWT_REFRESH_SECRET` | Yes | Refresh token signing secret | *Alphanumeric key* |
 | `CLIENT_URL` | Yes | Allowed CORS frontend origin | `https://intellmeet.vercel.app` |
+| `SENTRY_DSN` | No | Sentry monitoring endpoint | `https://examplePublicKey@o0.ingest.sentry.io/0` |
+| `VITE_SENTRY_DSN` | No | Frontend Sentry endpoint | `https://examplePublicKey@o0.ingest.sentry.io/0` |
 | `REDIS_URL` | No | TLS Redis cache link | `rediss://default:token@cluster.upstash.io:6379` |
 | `CLOUDINARY_URL`| No | Image CDN credentials | `cloudinary://api_key:secret@cloud_name` |
 
