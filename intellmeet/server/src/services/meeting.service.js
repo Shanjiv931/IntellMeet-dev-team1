@@ -2,11 +2,7 @@ import mongoose from 'mongoose';
 import Meeting from '../models/Meeting.model.js';
 import AppError from '../utils/AppError.js';
 import logger from '../utils/logger.js';
-
-// In-Memory fallback store for meetings when MongoDB is offline
-const memoryMeetings = [];
-
-const isDBConnected = () => mongoose.connection.readyState === 1;
+import { memoryStore, isDBConnected } from '../utils/memoryStore.js';
 
 /**
  * Create a new meeting
@@ -51,7 +47,7 @@ export const createMeeting = async ({ title, description, hostId, startTime, end
     updatedAt: new Date()
   };
 
-  memoryMeetings.push(mockMeeting);
+  memoryStore.meetings.push(mockMeeting);
   logger.info(`Resilient DB Fallback: Created meeting in-memory: ${mockMeeting._id}`);
   return mockMeeting;
 };
@@ -76,7 +72,7 @@ export const getMeetingsForUser = async (userId) => {
 
   // Memory fallback query
   const stringId = userId.toString();
-  const filtered = memoryMeetings.filter(m => 
+  const filtered = memoryStore.meetings.filter(m => 
     (m.host && m.host.toString() === stringId) || 
     (m.participants && m.participants.some(p => p.toString() === stringId))
   );
@@ -102,7 +98,7 @@ export const getMeetingById = async (meetingId) => {
   }
 
   // Memory fallback query
-  const meeting = memoryMeetings.find(m => m._id.toString() === meetingId.toString());
+  const meeting = memoryStore.meetings.find(m => m._id.toString() === meetingId.toString());
   if (!meeting) {
     throw new AppError('Meeting not found in-memory.', 404);
   }
@@ -139,12 +135,12 @@ export const updateMeeting = async (meetingId, updateFields, userId) => {
   }
 
   // Memory fallback query
-  const index = memoryMeetings.findIndex(m => m._id.toString() === meetingId.toString());
+  const index = memoryStore.meetings.findIndex(m => m._id.toString() === meetingId.toString());
   if (index === -1) {
     throw new AppError('Meeting not found in-memory.', 404);
   }
 
-  const meeting = memoryMeetings[index];
+  const meeting = memoryStore.meetings[index];
   const hostId = meeting.host._id || meeting.host;
   if (hostId.toString() !== userId.toString()) {
     throw new AppError('Not authorized to modify this meeting.', 403);
@@ -156,7 +152,7 @@ export const updateMeeting = async (meetingId, updateFields, userId) => {
     updatedAt: new Date()
   };
 
-  memoryMeetings[index] = updatedMeeting;
+  memoryStore.meetings[index] = updatedMeeting;
   logger.info(`Resilient DB Fallback: Updated meeting in-memory: ${meetingId}`);
   return updatedMeeting;
 };
@@ -187,18 +183,18 @@ export const deleteMeeting = async (meetingId, userId) => {
   }
 
   // Memory fallback query
-  const index = memoryMeetings.findIndex(m => m._id.toString() === meetingId.toString());
+  const index = memoryStore.meetings.findIndex(m => m._id.toString() === meetingId.toString());
   if (index === -1) {
     throw new AppError('Meeting not found in-memory.', 404);
   }
 
-  const meeting = memoryMeetings[index];
+  const meeting = memoryStore.meetings[index];
   const hostId = meeting.host._id || meeting.host;
   if (hostId.toString() !== userId.toString()) {
     throw new AppError('Not authorized to delete this meeting.', 403);
   }
 
-  memoryMeetings.splice(index, 1);
+  memoryStore.meetings.splice(index, 1);
   logger.info(`Resilient DB Fallback: Deleted meeting from in-memory array: ${meetingId}`);
   return true;
 };
@@ -225,19 +221,20 @@ export const updateMeetingSummaryInternal = async (meetingId, summaryData) => {
   }
 
   // Memory fallback query
-  const index = memoryMeetings.findIndex(m => m._id.toString() === meetingId.toString());
+  const index = memoryStore.meetings.findIndex(m => m._id.toString() === meetingId.toString());
   if (index === -1) {
     throw new AppError('Meeting not found in-memory.', 404);
   }
 
-  const meeting = memoryMeetings[index];
+  const meeting = memoryStore.meetings[index];
   const updatedMeeting = {
     ...meeting,
     ...summaryData,
     updatedAt: new Date()
   };
 
-  memoryMeetings[index] = updatedMeeting;
+  memoryStore.meetings[index] = updatedMeeting;
   logger.info(`Resilient DB Fallback: Updated meeting summary in-memory: ${meetingId}`);
   return updatedMeeting;
 };
+

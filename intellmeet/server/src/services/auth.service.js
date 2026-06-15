@@ -5,32 +5,7 @@ import Session from '../models/Session.model.js';
 import AppError from '../utils/AppError.js';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.utils.js';
 import logger from '../utils/logger.js';
-
-// Resilient in-memory database store for users when MongoDB is offline
-const memoryUsers = [];
-
-// Initialize default admin in memory
-const initializeMemoryAdmin = async () => {
-  try {
-    const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash('Password123!', salt);
-    memoryUsers.push({
-      _id: new mongoose.Types.ObjectId().toString(),
-      name: 'IntellMeet Admin',
-      email: 'admin@intellmeet.app',
-      password: hashedPassword,
-      role: 'ADMIN',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-    logger.info('Resilient DB Fallback: Pre-seeded admin user in-memory.');
-  } catch (err) {
-    logger.error('Failed to initialize memory admin:', err);
-  }
-};
-initializeMemoryAdmin();
-
-const isDBConnected = () => mongoose.connection.readyState === 1;
+import { memoryStore, isDBConnected } from '../utils/memoryStore.js';
 
 /**
  * Register a new user in MongoDB Atlas (with in-memory fallback)
@@ -78,7 +53,7 @@ export const registerUser = async ({ name, email, password, role, userAgent, ipA
   }
 
   // Memory mode fallback
-  const existingMemoryUser = memoryUsers.find(u => u.email === normalizedEmail);
+  const existingMemoryUser = memoryStore.users.find(u => u.email === normalizedEmail);
   if (existingMemoryUser) {
     throw new AppError('Email address is already registered in the system.', 409);
   }
@@ -97,7 +72,7 @@ export const registerUser = async ({ name, email, password, role, userAgent, ipA
     updatedAt: new Date()
   };
 
-  memoryUsers.push(mockUser);
+  memoryStore.users.push(mockUser);
   logger.info(`Resilient DB Fallback: Registered user in-memory: ${mockUser._id}`);
 
   const userResponse = {
@@ -111,6 +86,18 @@ export const registerUser = async ({ name, email, password, role, userAgent, ipA
   const payload = { id: mockUser._id, email: mockUser.email, role: mockUser.role };
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
+
+  const mockSession = {
+    _id: new mongoose.Types.ObjectId().toString(),
+    user: mockUser._id,
+    token: accessToken,
+    device: userAgent || 'Unknown Device',
+    ipAddress: ipAddress || 'Unknown IP',
+    lastActive: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+  memoryStore.sessions.push(mockSession);
 
   return {
     user: userResponse,
@@ -166,7 +153,7 @@ export const loginUser = async ({ email, password, userAgent, ipAddress }) => {
   }
 
   // Memory mode fallback
-  const user = memoryUsers.find(u => u.email === normalizedEmail);
+  const user = memoryStore.users.find(u => u.email === normalizedEmail);
   if (!user) {
     throw new AppError('Invalid email or password. Please try again.', 401);
   }
@@ -190,6 +177,18 @@ export const loginUser = async ({ email, password, userAgent, ipAddress }) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
+  const mockSession = {
+    _id: new mongoose.Types.ObjectId().toString(),
+    user: user._id,
+    token: accessToken,
+    device: userAgent || 'Unknown Device',
+    ipAddress: ipAddress || 'Unknown IP',
+    lastActive: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+  memoryStore.sessions.push(mockSession);
+
   return {
     user: userResponse,
     tokens: { accessToken, refreshToken }
@@ -209,7 +208,7 @@ export const getUserById = async (userId) => {
   }
 
   // Memory mode fallback
-  const user = memoryUsers.find(u => u._id.toString() === userId.toString());
+  const user = memoryStore.users.find(u => u._id.toString() === userId.toString());
   if (!user) {
     throw new AppError('Requested user session could not be found.', 404);
   }
@@ -244,3 +243,4 @@ export const refreshUserTokens = async (refreshToken) => {
     throw new AppError('Invalid or expired refresh token. Please sign in again.', 401);
   }
 };
+

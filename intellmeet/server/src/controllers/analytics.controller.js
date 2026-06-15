@@ -1,6 +1,7 @@
 import Meeting from '../models/Meeting.model.js';
 import Task from '../models/Task.model.js';
 import logger from '../utils/logger.js';
+import { memoryStore, isDBConnected } from '../utils/memoryStore.js';
 
 /**
  * Compile meeting and task data to produce productivity metrics and trends
@@ -9,22 +10,37 @@ import logger from '../utils/logger.js';
 export const getAnalytics = async (req, res, next) => {
   try {
     const userId = req.user._id || req.user.id;
+    let meetings, tasks;
 
-    // Resolve all meetings involving the user (either host or participant)
-    const meetings = await Meeting.find({
-      $or: [
-        { host: userId },
-        { participants: userId }
-      ]
-    });
+    if (isDBConnected()) {
+      // Resolve all meetings involving the user (either host or participant)
+      meetings = await Meeting.find({
+        $or: [
+          { host: userId },
+          { participants: userId }
+        ]
+      });
 
-    // Resolve all tasks involving the user (either creator or assignee)
-    const tasks = await Task.find({
-      $or: [
-        { creator: userId },
-        { assignee: userId }
-      ]
-    });
+      // Resolve all tasks involving the user (either creator or assignee)
+      tasks = await Task.find({
+        $or: [
+          { creator: userId },
+          { assignee: userId }
+        ]
+      });
+    } else {
+      // Fallback: Resolve from memoryStore
+      const stringId = userId.toString();
+      meetings = memoryStore.meetings.filter(m =>
+        (m.host && m.host.toString() === stringId) ||
+        (m.participants && m.participants.some(p => p.toString() === stringId))
+      );
+      tasks = memoryStore.tasks.filter(t =>
+        (t.creator && t.creator.toString() === stringId) ||
+        (t.assignee && t.assignee.toString() === stringId)
+      );
+    }
+
 
     // Compute overview statistics
     const totalMeetings = meetings.length;
