@@ -111,3 +111,80 @@
     display: none;
   }
 }
+
+.room-code-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 20px;
+  padding-left: 20px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.room-code-label {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.room-code-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.room-code-badge:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-0.5px);
+}
+
+.room-code-badge.copied {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.room-code-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12.5px;
+  color: #e5e7eb;
+  font-weight: 600;
+}
+
+.room-code-badge.copied .room-code-text {
+  color: #34d399;
+}
+
+.room-code-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  transition: color 0.2s;
+}
+
+.room-code-badge:hover .room-code-icon-wrapper {
+  color: #f3f4f6;
+}
+
+.copy-icon.success-icon {
+  color: #34d399;
+}
+
+@media (max-width: 768px) {
+  .room-code-container {
+    margin-left: 10px;
+    padding-left: 10px;
+  }
+  .room-code-label {
+    display: none;
+  }
+}

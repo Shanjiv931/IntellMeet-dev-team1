@@ -1,3 +1,4 @@
+import './config/instrument.js';
 import dns from 'dns';
 import http from 'http';
 import app from './app.js';

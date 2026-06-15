@@ -39,3 +39,6 @@ ingress:
   enabled: true
   className: "nginx"
   host: "intellmeet.app"
+
+sentry:
+  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0"

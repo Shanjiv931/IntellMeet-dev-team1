@@ -14,6 +14,10 @@ spec:
     metadata:
       labels:
         app: intellmeet-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: intellmeet-backend
@@ -26,6 +30,11 @@ spec:
               value: "8080"
             - name: NODE_ENV
               value: "production"
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: intellmeet-secrets
+                  key: sentry-dsn
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
@@ -92,6 +101,12 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
+          env:
+            - name: VITE_SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: intellmeet-secrets
+                  key: sentry-dsn
           resources:
             limits:
               cpu: "300m"

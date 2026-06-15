@@ -274,3 +274,66 @@
   0%, 100% { opacity: 0.4; }
   50% { opacity: 0.8; }
 }
+
+.ai-engine-badge {
+  font-size: 10px;
+  background: rgba(124, 58, 237, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.transcript-scroller {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-top: 4px;
+}
+
+.transcript-scroller::-webkit-scrollbar {
+  width: 4px;
+}
+
+.transcript-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.transcript-scroller::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+}
+
+.no-transcript-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  font-style: italic;
+  margin: 0;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.transcript-bubble {
+  font-size: 12.5px;
+  line-height: 1.4;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.transcript-speaker {
+  font-weight: 700;
+  color: #60a5fa;
+  margin-right: 6px;
+}
+
+.transcript-phrase {
+  color: #cbd5e1;
+}
+

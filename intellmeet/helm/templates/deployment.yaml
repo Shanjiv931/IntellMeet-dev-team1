@@ -13,6 +13,10 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.backend.port }}"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: backend
@@ -25,6 +29,8 @@ spec:
               value: "{{ .Values.backend.port }}"
             - name: NODE_ENV
               value: "production"
+            - name: SENTRY_DSN
+              value: "{{ .Values.sentry.dsn }}"
             - name: MONGO_URI
               value: "{{ .Values.backend.secrets.mongoUri }}"
             - name: JWT_SECRET
@@ -76,6 +82,9 @@ spec:
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.frontend.port }}
+          env:
+            - name: VITE_SENTRY_DSN
+              value: "{{ .Values.sentry.dsn }}"
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
           livenessProbe:

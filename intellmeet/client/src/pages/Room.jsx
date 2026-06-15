@@ -561,7 +561,7 @@ export default function Room({ onNavigate, user, meeting }) {
   return (
     <div className="room-page">
       {/* Top Header Panel */}
-      <RoomHeader title={meetingTitle} seconds={seconds} />
+      <RoomHeader title={meetingTitle} seconds={seconds} roomId={roomId} />
 
       {/* Main Container */}
       <div className="room-main-container">

@@ -1,4 +1,5 @@
 import express from 'express';
+import * as Sentry from '@sentry/node';
 import helmet from 'helmet';
 import cors from 'cors';
 import env from './config/env.js';
@@ -12,8 +13,12 @@ import notificationRoutes from './routes/notification.routes.js';
 import errorMiddleware from './middleware/error.middleware.js';
 import AppError from './utils/AppError.js';
 import { apiRateLimiter } from './middleware/rateLimit.middleware.js';
+import { metricsMiddleware, metricsEndpoint } from './middleware/metrics.middleware.js';
 
 const app = express();
+
+// Track HTTP latency and throughput early in the request pipeline
+app.use(metricsMiddleware);
 
 /**
  * Trust Proxy Configuration: Mandatory for cloud hosting platforms (Render, Railway, Fly.io, Heroku)
@@ -66,6 +71,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Expose metrics for Prometheus scraping (uncapped by rate limiter)
+app.get('/metrics', metricsEndpoint);
+
 // Protect all backend API resource endpoints under a standard rate limit
 app.use('/api', apiRateLimiter);
 
@@ -91,6 +99,9 @@ app.use('/api/notifications', notificationRoutes);
 app.all('*', (req, res, next) => {
   next(new AppError(`Requested resource '${req.originalUrl}' could not be located on this server.`, 404));
 });
+
+// Register Sentry Express Error Handler to automatically capture and log unhandled routing errors
+Sentry.setupExpressErrorHandler(app);
 
 // Register Centralized Error Middleware (Must reside at the very end of middleware pipeline)
 app.use(errorMiddleware);

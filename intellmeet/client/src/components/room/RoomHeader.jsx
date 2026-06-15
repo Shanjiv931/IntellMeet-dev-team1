@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './RoomHeader.css';
 
-export default function RoomHeader({ title = "Q3 Strategy Planning", seconds = 0, formatTimer }) {
+export default function RoomHeader({ title = "Q3 Strategy Planning", seconds = 0, roomId = "", formatTimer }) {
+  const [copied, setCopied] = useState(false);
+
   const defaultFormatTimer = (totalSecs) => {
     const hrs = Math.floor(totalSecs / 3600);
     const mins = Math.floor((totalSecs % 3600) / 60);
@@ -14,6 +16,17 @@ export default function RoomHeader({ title = "Q3 Strategy Planning", seconds = 0
   };
 
   const timerString = formatTimer ? formatTimer(seconds) : defaultFormatTimer(seconds);
+
+  const handleCopyCode = async () => {
+    if (!roomId) return;
+    try {
+      await navigator.clipboard.writeText(roomId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy room code:', err);
+    }
+  };
 
   return (
     <header className="room-header">
@@ -33,6 +46,31 @@ export default function RoomHeader({ title = "Q3 Strategy Planning", seconds = 0
             <span className="status-label">Live Recording</span>
           </div>
         </div>
+
+        {roomId && (
+          <div className="room-code-container">
+            <span className="room-code-label">Code:</span>
+            <button 
+              className={`room-code-badge ${copied ? 'copied' : ''}`}
+              onClick={handleCopyCode}
+              title="Copy meeting join code"
+            >
+              <span className="room-code-text">{roomId}</span>
+              <span className="room-code-icon-wrapper">
+                {copied ? (
+                  <svg className="copy-icon success-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                ) : (
+                  <svg className="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                )}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="header-right">

@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../../utils/api';
 import './AiNotesPanel.css';
 
 export default function AiNotesPanel({ meeting, transcriptHistory = [] }) {
+  const transcriptScrollerRef = useRef(null);
+
+  // Auto-scroll the live transcript feed as new voice entries compile
+  useEffect(() => {
+    if (transcriptScrollerRef.current) {
+      transcriptScrollerRef.current.scrollTop = transcriptScrollerRef.current.scrollHeight;
+    }
+  }, [transcriptHistory]);
   const meetingId = meeting?._id || meeting?.id;
 
   const [aiSummary, setAiSummary] = useState('');
@@ -83,9 +91,12 @@ export default function AiNotesPanel({ meeting, transcriptHistory = [] }) {
   return (
     <div className="ainotes-panel-container">
       <div className="ainotes-panel-header">
-        <span className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}><path d="M12 2a10 10 0 0 1 7.54 16.59c-.24.25-.36.59-.36.93v1.64c0 .46-.37.84-.83.84H7.66A.83.83 0 0 1 6.83 21v-1.64c0-.34-.12-.68-.36-.93A10 10 0 0 1 12 2z"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
-          AI Assistant Notes
+        <span className="panel-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}><path d="M12 2a10 10 0 0 1 7.54 16.59c-.24.25-.36.59-.36.93v1.64c0 .46-.37.84-.83.84H7.66A.83.83 0 0 1 6.83 21v-1.64c0-.34-.12-.68-.36-.93A10 10 0 0 1 12 2z"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
+            AI Assistant
+          </span>
+          <span className="ai-engine-badge">Gemini 1.5 Flash</span>
         </span>
       </div>
 
@@ -96,7 +107,7 @@ export default function AiNotesPanel({ meeting, transcriptHistory = [] }) {
             className="btn-generate-ai"
             onClick={handleGenerateSummary}
             disabled={loading || transcriptHistory.length === 0}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             {loading ? 'Synthesizing with Gemini...' : 'Generate AI Summary'}
@@ -106,6 +117,40 @@ export default function AiNotesPanel({ meeting, transcriptHistory = [] }) {
               Speak or enable mic live captions to collect transcript logs before compiling AI summary.
             </p>
           )}
+        </div>
+
+        {/* Live Transcript History Feed */}
+        <div className="ainotes-item border-left-purple" style={{ padding: '12px 14px' }}>
+          <div className="note-header" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+            <span className="note-icon" style={{ display: 'flex', alignItems: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a78bfa' }}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </span>
+            <h5>Live Transcript Feed</h5>
+          </div>
+          <div className="transcript-scroller" ref={transcriptScrollerRef}>
+            {transcriptHistory.length === 0 ? (
+              <p className="no-transcript-text">No voice activity detected. Speak to write captions...</p>
+            ) : (
+              transcriptHistory.map((phrase, idx) => {
+                const colonIdx = phrase.indexOf(':');
+                if (colonIdx !== -1) {
+                  const speaker = phrase.slice(0, colonIdx);
+                  const text = phrase.slice(colonIdx + 1);
+                  return (
+                    <div key={idx} className="transcript-bubble">
+                      <span className="transcript-speaker">{speaker}:</span>
+                      <span className="transcript-phrase">{text}</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={idx} className="transcript-bubble">
+                    <span className="transcript-phrase">{phrase}</span>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
 
         {error && (
