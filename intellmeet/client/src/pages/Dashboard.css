@@ -1051,6 +1051,15 @@ body.font-size-large .settings-select {
     grid-template-columns: 1fr;
     gap: 24px;
   }
+  .card-header-flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .card-header-flex .btn-settings-outline {
+    align-self: flex-start;
+    width: auto;
+  }
 }
 
 @media (max-width: 576px) {
@@ -1067,5 +1076,14 @@ body.font-size-large .settings-select {
   }
   .pane-header h2 {
     font-size: 18px;
+  }
+  .session-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .session-item .btn-revoke-session {
+    align-self: flex-start;
+    width: auto;
   }
 }
