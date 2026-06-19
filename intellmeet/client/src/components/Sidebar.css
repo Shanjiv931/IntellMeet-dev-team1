@@ -4,12 +4,13 @@
   position: fixed;
   top: 0;
   left: 0;
-  background-color: white;
+  background-color: var(--bg-main);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   padding: 24px;
   z-index: 100;
+  color: var(--text-main);
 }
 
 .sidebar-brand {

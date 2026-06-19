@@ -10,7 +10,7 @@ import { memoryStore, isDBConnected } from '../utils/memoryStore.js';
 /**
  * Register a new user in MongoDB Atlas (with in-memory fallback)
  */
-export const registerUser = async ({ name, email, password, role, userAgent, ipAddress }) => {
+export const registerUser = async ({ name, email, password, role, userAgent, ipAddress, rememberMe = false }) => {
   const normalizedEmail = email.toLowerCase().trim();
 
   if (isDBConnected()) {
@@ -37,7 +37,7 @@ export const registerUser = async ({ name, email, password, role, userAgent, ipA
 
     const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
     const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
+    const refreshToken = generateRefreshToken(payload, rememberMe);
 
     await Session.create({
       user: newUser._id,
@@ -85,7 +85,7 @@ export const registerUser = async ({ name, email, password, role, userAgent, ipA
 
   const payload = { id: mockUser._id, email: mockUser.email, role: mockUser.role };
   const accessToken = generateAccessToken(payload);
-  const refreshToken = generateRefreshToken(payload);
+  const refreshToken = generateRefreshToken(payload, rememberMe);
 
   const mockSession = {
     _id: new mongoose.Types.ObjectId().toString(),
@@ -108,7 +108,7 @@ export const registerUser = async ({ name, email, password, role, userAgent, ipA
 /**
  * Login a user by validating credentials (with in-memory fallback)
  */
-export const loginUser = async ({ email, password, userAgent, ipAddress }) => {
+export const loginUser = async ({ email, password, userAgent, ipAddress, rememberMe = false }) => {
   if (!email || !password) {
     throw new AppError('Please provide both email and password to log in.', 400);
   }
@@ -137,7 +137,7 @@ export const loginUser = async ({ email, password, userAgent, ipAddress }) => {
 
     const payload = { id: user._id, email: user.email, role: user.role };
     const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
+    const refreshToken = generateRefreshToken(payload, rememberMe);
 
     await Session.create({
       user: user._id,
@@ -175,7 +175,7 @@ export const loginUser = async ({ email, password, userAgent, ipAddress }) => {
 
   const payload = { id: user._id, email: user.email, role: user.role };
   const accessToken = generateAccessToken(payload);
-  const refreshToken = generateRefreshToken(payload);
+  const refreshToken = generateRefreshToken(payload, rememberMe);
 
   const mockSession = {
     _id: new mongoose.Types.ObjectId().toString(),
@@ -225,7 +225,10 @@ export const refreshUserTokens = async (refreshToken) => {
 
     const payload = { id: user._id || user.id, email: user.email, role: user.role };
     const newAccessToken = generateAccessToken(payload);
-    const newRefreshToken = generateRefreshToken(payload);
+    
+    // Check if original token was signed with long duration (e.g. 30 days)
+    const isLongLived = decoded.exp && decoded.iat && (decoded.exp - decoded.iat >= 29 * 24 * 60 * 60);
+    const newRefreshToken = generateRefreshToken(payload, isLongLived);
 
     return {
       user: {

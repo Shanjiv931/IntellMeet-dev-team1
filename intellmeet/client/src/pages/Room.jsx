@@ -15,8 +15,12 @@ export default function Room({ onNavigate, user, meeting }) {
   const meetingTitle = meeting?.title || "Q3 Strategy Planning";
 
   // Toolbar and Meeting States
-  const [isMuted, setIsMuted] = useState(false);
-  const [isCameraOff, setIsCameraOff] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => {
+    return localStorage.getItem('intellmeet_lobby_mic') === 'off';
+  });
+  const [isCameraOff, setIsCameraOff] = useState(() => {
+    return localStorage.getItem('intellmeet_lobby_cam') === 'off';
+  });
   const [isSharingScreen, setIsSharingScreen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [activeSidebarTab, setActiveSidebarTab] = useState('participants'); // 'chat', 'participants', or 'ainotes'

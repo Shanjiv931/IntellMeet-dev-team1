@@ -12,8 +12,8 @@ if (API_BASE_URL.includes('intellmeet-backend.onrender.com') || API_BASE_URL.inc
 
 class ApiClient {
   constructor() {
-    this.accessToken = localStorage.getItem('intellmeet_access_token');
-    this.refreshToken = localStorage.getItem('intellmeet_refresh_token');
+    this.accessToken = localStorage.getItem('intellmeet_access_token') || sessionStorage.getItem('intellmeet_access_token');
+    this.refreshToken = localStorage.getItem('intellmeet_refresh_token') || sessionStorage.getItem('intellmeet_refresh_token');
     this.isRefreshing = false;
     this.refreshSubscribers = [];
 
@@ -28,11 +28,26 @@ class ApiClient {
     this.setupInterceptors();
   }
 
-  setTokens(accessToken, refreshToken) {
+  setTokens(accessToken, refreshToken, rememberMe = null) {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
-    localStorage.setItem('intellmeet_access_token', accessToken);
-    localStorage.setItem('intellmeet_refresh_token', refreshToken);
+    
+    // Fallback: if rememberMe is not specified, check if refresh token was already in localStorage
+    const isRemembered = rememberMe !== null 
+      ? rememberMe 
+      : (localStorage.getItem('intellmeet_refresh_token') !== null);
+
+    if (isRemembered) {
+      localStorage.setItem('intellmeet_access_token', accessToken);
+      localStorage.setItem('intellmeet_refresh_token', refreshToken);
+      sessionStorage.removeItem('intellmeet_access_token');
+      sessionStorage.removeItem('intellmeet_refresh_token');
+    } else {
+      sessionStorage.setItem('intellmeet_access_token', accessToken);
+      sessionStorage.setItem('intellmeet_refresh_token', refreshToken);
+      localStorage.removeItem('intellmeet_access_token');
+      localStorage.removeItem('intellmeet_refresh_token');
+    }
   }
 
   clearTokens() {
@@ -41,6 +56,9 @@ class ApiClient {
     localStorage.removeItem('intellmeet_access_token');
     localStorage.removeItem('intellmeet_refresh_token');
     localStorage.removeItem('intellmeet_user');
+    sessionStorage.removeItem('intellmeet_access_token');
+    sessionStorage.removeItem('intellmeet_refresh_token');
+    sessionStorage.removeItem('intellmeet_user');
   }
 
   subscribeTokenRefresh(callback) {

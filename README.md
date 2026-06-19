@@ -642,6 +642,33 @@ When a meeting is launched, participants can easily invite others by copying the
 
 ---
 
+## 🛠️ Session Persistence, Lobby Previews, Theme Control & Local DB Fallback
+
+We have finalized a major set of core platform features to ensure the platform is robust, responsive, and ready for use:
+
+### 1. Durable Local Fallback Database Serialization
+* **Automatic Autosave Proxy**: Implemented ES6 Proxies on the in-memory data store arrays (`users`, `meetings`, `tasks`, etc.) that automatically serializes state changes directly to a local file (`local_fallback_db.json`) on any mutation.
+* **Resilient Startup Loading**: Added automatic file-backed database restoration on server boot so user accounts, Kanban boards, and completed meeting summaries remain persistent between server restarts in local fallback mode.
+
+### 2. Remember Me Session Persistence (30 Days)
+* **Checkbox Token Routing**: The "Remember me for 30 days" login toggle determines token storage routing. When checked, auth tokens persist in `localStorage`; when unchecked, they reside in `sessionStorage` and expire upon tab closure.
+* **Extended JWT Lifespans**: The backend dynamically issues `30d` tokens for users who request persistent sessions, and maintains this lifespan on subsequent token rotations.
+
+### 3. Lobby Media Preview & Real-Time Audio Level Analyzer
+* **Instant Webcam Preview**: Lobby initializes local webcam and microphone permission requests immediately upon toggle, displaying a mirrored live preview inside a `<video>` container before entering the room.
+* **Live Audio Visual Feedback**: Programmed a Web Audio API frequency analyser and volume level meter that oscillates dynamically to give visual confirmation of mic status.
+* **Preference Propagation**: Saved preferences are stored and automatically applied to the active room on join.
+
+### 4. Global Dark & Light Theme System
+* **Consistent Variables**: Added `.dark-theme` variable overrides to the CSS root variables in `index.css`.
+* **Theme-Adaptable Layouts**: Modified the sidebar, navbar, dashboard panels, and lobby card layouts to use CSS theme variables (`var(--bg-main)`, `var(--text-main)`) instead of hardcoded white backgrounds.
+* **System Matcher & Listener**: Added media query change listeners on the client to automatically adjust appearance when the user selects the "system" theme preference.
+
+### 5. Authentic Testimonials
+* **Jane Cooper Removal**: Replaced the generic placeholder "Jane Cooper" quote on the login screen with a professional testimonial detailing IntellMeet's automated Groq summary integrations.
+
+---
+
 ## 🚀 Deployment & Operations Guide
 
 ### Local Development Setup

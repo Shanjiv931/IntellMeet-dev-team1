@@ -27,6 +27,7 @@ lib-cov
 coverage
 coverage.lcov
 .nyc_output
+local_fallback_db.json
 
 # IDEs and editors
 .idea/

@@ -8,13 +8,13 @@ import Room from './pages/Room';
 import api from './utils/api';
 
 function App() {
-  // Initialize user state from localStorage
+  // Initialize user state from localStorage/sessionStorage
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const savedUser = localStorage.getItem('intellmeet_user');
+      const savedUser = localStorage.getItem('intellmeet_user') || sessionStorage.getItem('intellmeet_user');
       return savedUser ? JSON.parse(savedUser) : null;
     } catch (e) {
-      console.error('Failed to parse saved user from localStorage', e);
+      console.error('Failed to parse saved user from storage', e);
       return null;
     }
   });
@@ -22,7 +22,7 @@ function App() {
   // Initialize view based on user session status
   const [view, setView] = useState(() => {
     try {
-      const savedUser = localStorage.getItem('intellmeet_user');
+      const savedUser = localStorage.getItem('intellmeet_user') || sessionStorage.getItem('intellmeet_user');
       return savedUser ? 'dashboard' : 'landing';
     } catch {
       return 'landing';
@@ -31,6 +31,21 @@ function App() {
 
   // Track currently active meeting room details
   const [activeMeeting, setActiveMeeting] = useState(null);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('intellmeet_theme') || 'dark';
+    let activeTheme = savedTheme;
+    if (savedTheme === 'system') {
+      activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    if (activeTheme === 'light') {
+      document.body.classList.add('light-theme');
+      document.body.classList.remove('dark-theme');
+    } else {
+      document.body.classList.add('dark-theme');
+      document.body.classList.remove('light-theme');
+    }
+  }, []);
 
   useEffect(() => {
     const privateViews = ['dashboard', 'lobby', 'room'];
@@ -45,7 +60,7 @@ function App() {
   // Sync profile details with database on start if tokens exist
   useEffect(() => {
     const verifySession = async () => {
-      const token = localStorage.getItem('intellmeet_access_token');
+      const token = localStorage.getItem('intellmeet_access_token') || sessionStorage.getItem('intellmeet_access_token');
       if (token && currentUser) {
         try {
           const res = await api.get('/auth/me');
@@ -57,7 +72,13 @@ function App() {
             avatar: res.data.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
           };
           setCurrentUser(verifiedUser);
-          localStorage.setItem('intellmeet_user', JSON.stringify(verifiedUser));
+          if (localStorage.getItem('intellmeet_access_token')) {
+            localStorage.setItem('intellmeet_user', JSON.stringify(verifiedUser));
+            sessionStorage.removeItem('intellmeet_user');
+          } else {
+            sessionStorage.setItem('intellmeet_user', JSON.stringify(verifiedUser));
+            localStorage.removeItem('intellmeet_user');
+          }
         } catch (err) {
           console.warn('Session verification failed. Token might be expired.', err);
           // Api client handles clearing on hard 401, but we can fallback here if needed
@@ -82,8 +103,8 @@ function App() {
     window.scrollTo(0, 0);
   };
 
-  const handleLoginSuccess = ({ user, tokens }) => {
-    api.setTokens(tokens.accessToken, tokens.refreshToken);
+  const handleLoginSuccess = ({ user, tokens }, rememberMe = false) => {
+    api.setTokens(tokens.accessToken, tokens.refreshToken, rememberMe);
     const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     
     const formattedUser = {
@@ -96,15 +117,21 @@ function App() {
     
     setCurrentUser(formattedUser);
     try {
-      localStorage.setItem('intellmeet_user', JSON.stringify(formattedUser));
+      if (rememberMe) {
+        localStorage.setItem('intellmeet_user', JSON.stringify(formattedUser));
+        sessionStorage.removeItem('intellmeet_user');
+      } else {
+        sessionStorage.setItem('intellmeet_user', JSON.stringify(formattedUser));
+        localStorage.removeItem('intellmeet_user');
+      }
     } catch (e) {
-      console.error('Failed to save user session in localStorage', e);
+      console.error('Failed to save user session in storage', e);
     }
     handleNavigate('dashboard');
   };
-
+ 
   const handleSignupSuccess = ({ user, tokens }) => {
-    api.setTokens(tokens.accessToken, tokens.refreshToken);
+    api.setTokens(tokens.accessToken, tokens.refreshToken, false);
     const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     
     const formattedUser = {
@@ -114,12 +141,13 @@ function App() {
       role: user.role || "Member",
       avatar: initials || "U"
     };
-
+ 
     setCurrentUser(formattedUser);
     try {
-      localStorage.setItem('intellmeet_user', JSON.stringify(formattedUser));
+      sessionStorage.setItem('intellmeet_user', JSON.stringify(formattedUser));
+      localStorage.removeItem('intellmeet_user');
     } catch (e) {
-      console.error('Failed to save user session in localStorage', e);
+      console.error('Failed to save user session in storage', e);
     }
     handleNavigate('dashboard');
   };

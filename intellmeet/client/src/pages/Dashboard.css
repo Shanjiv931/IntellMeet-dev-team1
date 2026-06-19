@@ -39,7 +39,7 @@
 }
 
 .action-card {
-  background-color: white;
+  background-color: var(--bg-main);
   border: 1px solid var(--border-color);
   padding: 24px;
   border-radius: var(--radius-md);
@@ -105,7 +105,7 @@
 }
 
 .widget-card {
-  background-color: white;
+  background-color: var(--bg-main);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
@@ -281,7 +281,7 @@
 }
 
 .modal-card {
-  background-color: white;
+  background-color: var(--bg-main);
   padding: 32px;
   border-radius: var(--radius-md);
   max-width: 440px;
@@ -312,7 +312,7 @@
 }
 
 .btn-modal-cancel {
-  background-color: white;
+  background-color: var(--bg-main);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   padding: 10px 18px;
@@ -1017,4 +1017,45 @@ body.font-size-large .settings-input,
 body.font-size-large .settings-select {
   font-size: 15px !important;
   padding: 12px 16px !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 991px) {
+  .widgets-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-main {
+    margin-left: 70px;
+  }
+  .settings-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 576px) {
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .dashboard-content {
+    padding: 16px;
+    gap: 16px;
+  }
+  .dashboard-welcome h1 {
+    font-size: 22px;
+  }
+  .pane-header h2 {
+    font-size: 18px;
+  }
 }

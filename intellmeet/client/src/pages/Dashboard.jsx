@@ -387,7 +387,13 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
   // Apply Appearance Preferences to document root
   useEffect(() => {
     // 1. Theme
-    if (theme === 'light') {
+    localStorage.setItem('intellmeet_theme', theme);
+    let activeTheme = theme;
+    if (theme === 'system') {
+      activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    if (activeTheme === 'light') {
       document.body.classList.add('light-theme');
       document.body.classList.remove('dark-theme');
     } else {
@@ -406,6 +412,24 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
     document.body.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
     document.body.classList.add(`font-size-${fontSize}`);
   }, [theme, compactMode, fontSize]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (theme === 'system') {
+        const activeTheme = mediaQuery.matches ? 'dark' : 'light';
+        if (activeTheme === 'light') {
+          document.body.classList.add('light-theme');
+          document.body.classList.remove('dark-theme');
+        } else {
+          document.body.classList.add('dark-theme');
+          document.body.classList.remove('light-theme');
+        }
+      }
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [theme]);
 
   // Filter meetings by search query in title, description, summary, transcript
   const filteredMeetings = meetings.filter(m => {

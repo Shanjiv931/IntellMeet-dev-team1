@@ -35,7 +35,7 @@ export const register = async (req, res, next) => {
  */
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     if (!email || !password) {
       throw new AppError('Missing credentials. Please supply email and password.', 400);
@@ -44,7 +44,7 @@ export const login = async (req, res, next) => {
     const userAgent = req.headers['user-agent'] || 'Unknown Device';
     const ipAddress = req.ip || 'Unknown IP';
 
-    const result = await authService.loginUser({ email, password, userAgent, ipAddress });
+    const result = await authService.loginUser({ email, password, userAgent, ipAddress, rememberMe });
 
     res.status(200).json({
       success: true,

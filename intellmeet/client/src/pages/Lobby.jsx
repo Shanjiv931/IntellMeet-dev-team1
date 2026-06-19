@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Lobby.css';
 
 export default function Lobby({ onNavigate, user, meeting }) {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const [localStream, setLocalStream] = useState(null);
+  const [volume, setVolume] = useState(0);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
 
   const safeUser = user || { name: "Guest User", role: "Guest", avatar: "GU" };
 
@@ -17,10 +21,108 @@ export default function Lobby({ onNavigate, user, meeting }) {
 
   const activeParticipants = meeting?.participants || [];
 
+  useEffect(() => {
+    let activeStream = null;
+
+    const startStream = async () => {
+      try {
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(t => t.stop());
+        }
+
+        if (isCamOn || isMicOn) {
+          const constraints = {
+            video: isCamOn ? { width: 1280, height: 720 } : false,
+            audio: isMicOn
+          };
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          activeStream = stream;
+          streamRef.current = stream;
+          setLocalStream(stream);
+
+          if (videoRef.current && isCamOn) {
+            videoRef.current.srcObject = stream;
+          }
+        } else {
+          setLocalStream(null);
+          streamRef.current = null;
+        }
+      } catch (err) {
+        console.error("Lobby media access failed:", err);
+      }
+    };
+
+    startStream();
+
+    return () => {
+      if (activeStream) {
+        activeStream.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, [isCamOn, isMicOn]);
+
+  useEffect(() => {
+    if (!isMicOn || !localStream) {
+      setVolume(0);
+      return;
+    }
+
+    const audioTracks = localStream.getAudioTracks();
+    if (audioTracks.length === 0) return;
+
+    let audioContext;
+    let analyser;
+    let source;
+    let animationFrameId;
+
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source = audioContext.createMediaStreamSource(localStream);
+      source.connect(analyser);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const updateVolume = () => {
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / bufferLength;
+        setVolume(Math.min(Math.round((average / 100) * 100), 100));
+        animationFrameId = requestAnimationFrame(updateVolume);
+      };
+
+      updateVolume();
+    } catch (err) {
+      console.error("Lobby audio context setup error:", err);
+    }
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (source) source.disconnect();
+      if (audioContext) audioContext.close();
+    };
+  }, [isMicOn, localStream]);
+
   const handleJoin = (e) => {
     e.preventDefault();
-    // Pass meeting details to Room view
+    localStorage.setItem('intellmeet_lobby_mic', isMicOn ? 'on' : 'off');
+    localStorage.setItem('intellmeet_lobby_cam', isCamOn ? 'on' : 'off');
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
     onNavigate('room', meeting);
+  };
+
+  const handleCancel = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    onNavigate('dashboard');
   };
 
   return (
@@ -29,10 +131,21 @@ export default function Lobby({ onNavigate, user, meeting }) {
         {/* Left Side: Video Preview & Device Toggles */}
         <div className="lobby-preview-col">
           <div className="preview-box">
-            {isCamOn ? (
-              <div className="camera-active">
-                <div className="avatar-preview">{safeUser.avatar}</div>
-                <span className="preview-label">Your camera is ON</span>
+            {isCamOn && localStream && localStream.getVideoTracks().length > 0 ? (
+              <div className="camera-active" style={{ width: '100%', height: '100%' }}>
+                <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '12px',
+                    transform: 'scaleX(-1)'
+                  }} 
+                />
               </div>
             ) : (
               <div className="camera-inactive">
@@ -44,7 +157,7 @@ export default function Lobby({ onNavigate, user, meeting }) {
             )}
             
             {/* Overlay indicators */}
-            <div className="status-indicators">
+            <div className="status-indicators" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className={`status-badge-icon ${isMicOn ? 'active' : 'muted'}`}>
                 {isMicOn ? (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
@@ -52,6 +165,13 @@ export default function Lobby({ onNavigate, user, meeting }) {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 11a7 7 0 0 1-2.29 5.12M19 10v2a7 7 0 0 1-1-3.5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
                 )}
               </span>
+              {isMicOn && (
+                <div className="mic-volume-meter" style={{ display: 'flex', gap: '3px', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)', padding: '6px 8px', borderRadius: '12px' }}>
+                  <div style={{ width: '3px', height: `${Math.max(4, volume * 0.15)}px`, background: '#10B981', transition: 'height 0.1s ease', borderRadius: '1px' }}></div>
+                  <div style={{ width: '3px', height: `${Math.max(4, volume * 0.25)}px`, background: '#10B981', transition: 'height 0.1s ease', borderRadius: '1px' }}></div>
+                  <div style={{ width: '3px', height: `${Math.max(4, volume * 0.15)}px`, background: '#10B981', transition: 'height 0.1s ease', borderRadius: '1px' }}></div>
+                </div>
+              )}
               <span className={`status-badge-icon ${isSpeakerOn ? 'active' : 'muted'}`}>
                 {isSpeakerOn ? (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
@@ -145,7 +265,7 @@ export default function Lobby({ onNavigate, user, meeting }) {
 
             <div className="lobby-actions">
               <button className="btn-lobby-join" onClick={handleJoin}>Join Meeting</button>
-              <button className="btn-lobby-cancel" onClick={() => onNavigate('dashboard')}>Cancel</button>
+              <button className="btn-lobby-cancel" onClick={handleCancel}>Cancel</button>
             </div>
           </div>
         </div>

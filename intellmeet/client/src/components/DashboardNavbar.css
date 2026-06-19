@@ -1,6 +1,6 @@
 .db-navbar {
   height: 72px;
-  background-color: white;
+  background-color: var(--bg-main);
   border-bottom: 1px solid var(--border-color);
   padding: 0 32px;
   display: flex;
@@ -9,6 +9,7 @@
   position: sticky;
   top: 0;
   z-index: 90;
+  color: var(--text-main);
 }
 
 .search-box {
@@ -159,7 +160,7 @@
   top: 45px;
   right: 0;
   width: 360px;
-  background: white;
+  background: var(--bg-main);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-xl);

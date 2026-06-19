@@ -15,11 +15,12 @@ export const generateAccessToken = (payload) => {
 /**
  * Generate a long-lived refresh JWT token
  * @param {object} payload - User object attributes to sign (id, email, role)
+ * @param {boolean} rememberMe - Whether user requested extended session
  * @returns {string} Signed JWT token
  */
-export const generateRefreshToken = (payload) => {
+export const generateRefreshToken = (payload, rememberMe = false) => {
   return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: '7d', // Recommended for session persistence
+    expiresIn: rememberMe ? '30d' : '7d', // Recommended for session persistence
   });
 };
 

@@ -15,8 +15,8 @@ export default function Login({ onNavigate, onLoginSuccess }) {
     setLoading(true);
     
     try {
-      const response = await api.post('/auth/login', { email, password });
-      onLoginSuccess(response.data);
+      const response = await api.post('/auth/login', { email, password, rememberMe });
+      onLoginSuccess(response.data, rememberMe);
     } catch (err) {
       setError(err.message || 'Invalid email or password. Please try again.');
     } finally {
@@ -106,13 +106,13 @@ export default function Login({ onNavigate, onLoginSuccess }) {
           <div className="quote-card">
             <div className="stars">★★★★★</div>
             <p className="quote-text">
-              "IntellMeet saves our product team over 5 hours of administrative summaries per sprint. The action items integration with Jira is seamless."
+              "IntellMeet's real-time transcription and automatic Groq summaries have completely eliminated manual meeting documentation for our team. The live duration tracking and persistent history are exceptionally reliable."
             </p>
             <div className="quote-author">
-              <div className="author-avatar">JD</div>
+              <div className="author-avatar">SJ</div>
               <div>
-                <div className="author-name">Jane Cooper</div>
-                <div className="author-title">VP of Product, TechCorp</div>
+                <div className="author-name">Sarah Jenkins</div>
+                <div className="author-title">Senior Engineering Manager, CloudSync</div>
               </div>
             </div>
           </div>
