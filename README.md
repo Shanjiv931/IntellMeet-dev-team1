@@ -698,24 +698,6 @@ We have finalized a major set of core platform features to ensure the platform i
    npm run seed
    ```
 
-### Production Environment Variables Reference
-
-| Variable Name | Required | Purpose | Production Example |
-| :--- | :--- | :--- | :--- |
-| `MONGO_URI` | Yes | MongoDB Atlas connection | `mongodb+srv://shanjivkr931:SHAN1pran2%24@cluster...` |
-| `NODE_ENV` | Yes | App runner mode | `production` |
-| `PORT` | Yes | Internal web server port | `8080` |
-| `JWT_SECRET` | Yes | Access token signing secret | *Alphanumeric key* |
-| `JWT_REFRESH_SECRET` | Yes | Refresh token signing secret | *Alphanumeric key* |
-| `CLIENT_URL` | Yes | Allowed CORS frontend origin | `https://intellmeet.vercel.app` |
-| `GROQ_API_KEY` | Yes | API key for Llama 3 summaries | `gsk_Oa7...` |
-| `SENTRY_DSN` | No | Sentry monitoring endpoint | `https://examplePublicKey@o0.ingest.sentry.io/0` |
-| `VITE_SENTRY_DSN` | No | Frontend Sentry endpoint | `https://examplePublicKey@o0.ingest.sentry.io/0` |
-| `REDIS_URL` | No | TLS Redis cache link | `rediss://default:token@cluster.upstash.io:6379` |
-| `CLOUDINARY_URL`| No | Image CDN credentials | `cloudinary://api_key:secret@cloud_name` |
-
----
-
 ## 👥 Dev Team Collaboration & Git Workflow
 
 1. Feature Branches: Contributors must push changes on dedicated branches:
