@@ -219,20 +219,20 @@ export default function WorkspaceKanban() {
       {/* Top Header Actions */}
       <div className="kanban-workspace-header">
         <div>
-          <h2>👥 Team Workspace</h2>
+          <h2>Team Workspace</h2>
           <p>Collaborative Kanban Board with real-time sync and action checklist tracking.</p>
         </div>
         
         <div className="header-controls">
           <input 
             type="text" 
-            placeholder="🔍 Search tasks by title or assignee..." 
+            placeholder="Search tasks by title or assignee..." 
             className="search-input-kanban"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <button className="btn-add-task-global" onClick={() => openAddTaskModal('TODO')}>
-            ➕ Create Task
+            Create Task
           </button>
         </div>
       </div>
@@ -291,7 +291,7 @@ export default function WorkspaceKanban() {
                             <span className="assignee-avatar">
                               {task.assignee?.name 
                                 ? task.assignee.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-                                : task.assigneeName ? task.assigneeName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '👤'}
+                                : task.assigneeName ? task.assigneeName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
                             </span>
                             <span className="assignee-name" title={task.assignee?.name || task.assigneeName}>
                               {task.assignee?.name || task.assigneeName || 'Unassigned'}
@@ -301,7 +301,7 @@ export default function WorkspaceKanban() {
                           {/* Due Date */}
                           {dateStr && (
                             <span className="task-due-date" title="Due Date">
-                              📅 {dateStr}
+                              {dateStr}
                             </span>
                           )}
                         </div>
@@ -317,7 +317,7 @@ export default function WorkspaceKanban() {
                 </div>
 
                 <button className="btn-add-task-column" onClick={() => openAddTaskModal(col.id)}>
-                  ➕ Add Task
+                  Add Task
                 </button>
               </div>
             );
@@ -329,7 +329,7 @@ export default function WorkspaceKanban() {
       {isModalOpen && (
         <div className="kanban-modal-backdrop">
           <div className="kanban-modal-box">
-            <h3>✨ Create New Kanban Task</h3>
+            <h3>Create New Kanban Task</h3>
             <form onSubmit={handleCreateTaskSubmit} className="kanban-form">
               <div className="form-group">
                 <label>Task Title *</label>

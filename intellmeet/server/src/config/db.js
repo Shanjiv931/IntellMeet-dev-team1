@@ -29,8 +29,8 @@ export const connectDB = async (attempt = 1) => {
       await new Promise((resolve) => setTimeout(resolve, delay));
       return connectDB(attempt + 1);
     } else {
-      logger.warn('⚠️ ⚠️ ⚠️ CRITICAL WARNING: Max database connection attempts reached. MongoDB Atlas connection is currently blocked (e.g. un-whitelisted IP or network firewall).');
-      logger.warn('⚠️ ⚠️ ⚠️ IntellMeet Backend will proceed to boot in highly resilient "In-Memory Fallback" mode for seamless offline testing.');
+      logger.warn('CRITICAL WARNING: Max database connection attempts reached. MongoDB Atlas connection is currently blocked (e.g. un-whitelisted IP or network firewall).');
+      logger.warn('IntellMeet Backend will proceed to boot in highly resilient "In-Memory Fallback" mode for seamless offline testing.');
     }
   }
 };

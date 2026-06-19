@@ -872,7 +872,7 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
               <h1>Welcome Back, {firstName}!</h1>
               <p>Here is your meeting intelligence recap for today.</p>
             </div>
-            {error && <div className="dashboard-error-banner" style={{ color: '#ef4444', backgroundColor: '#fef2f2', padding: '12px', borderRadius: '6px', marginBottom: '20px', fontSize: '14px', border: '1px solid #fee2e2', fontWeight: '500' }}>⚠️ {error}</div>}
+            {error && <div className="dashboard-error-banner" style={{ color: '#ef4444', backgroundColor: '#fef2f2', padding: '12px', borderRadius: '6px', marginBottom: '20px', fontSize: '14px', border: '1px solid #fee2e2', fontWeight: '500' }}>{error}</div>}
 
             {/* Quick Action Grid */}
             <div className="quick-actions-grid">
@@ -1703,7 +1703,7 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
                   cursor: 'pointer',
                   marginBottom: '20px'
                 }} onClick={() => document.getElementById('media-upload-input').click()}>
-                  <span style={{ fontSize: '32px', display: 'block', marginBottom: '8px' }}>🎥</span>
+                  <span style={{ fontSize: '14px', display: 'block', marginBottom: '8px', color: 'var(--primary)', fontWeight: '600' }}>[ Media File ]</span>
                   <strong style={{ fontSize: '14px', display: 'block' }}>
                     {uploadFile ? uploadFile.name : "Drag & Drop your media files here"}
                   </strong>
@@ -1753,13 +1753,13 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
             
             {scheduleError && (
               <div style={{ color: '#ef4444', backgroundColor: '#fef2f2', padding: '10px 14px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px', fontWeight: '500' }}>
-                ❌ {scheduleError}
+                Error: {scheduleError}
               </div>
             )}
             
             {scheduleSuccess && (
               <div style={{ color: '#10b981', backgroundColor: '#ecfdf5', padding: '10px 14px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px', fontWeight: '500' }}>
-                ✅ {scheduleSuccess}
+                Success: {scheduleSuccess}
               </div>
             )}
 

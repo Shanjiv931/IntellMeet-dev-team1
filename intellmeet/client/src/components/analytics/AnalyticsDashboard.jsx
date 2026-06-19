@@ -371,10 +371,16 @@ export default function AnalyticsDashboard({ setCurrentTab }) {
     return (
       <div className="dashboard-content container">
         <div className="analytics-error-state">
-          <div className="error-icon">⚠️</div>
+          <div className="error-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
           <h3>Failed to Load Analytics</h3>
           <p>{error}</p>
-          <button className="btn-join" onClick={fetchAnalytics}>🔄 Retry Load</button>
+          <button className="btn-join" onClick={fetchAnalytics}>Retry Load</button>
         </div>
       </div>
     );
@@ -393,7 +399,7 @@ export default function AnalyticsDashboard({ setCurrentTab }) {
     return (
       <div className="dashboard-content container">
         <div className="analytics-welcome-header">
-          <h1>📊 Performance Insights</h1>
+          <h1>Performance Insights</h1>
           <p>Optimize your focus and track team delivery metrics over time.</p>
         </div>
 
@@ -407,10 +413,10 @@ export default function AnalyticsDashboard({ setCurrentTab }) {
           <p>Schedule your first meeting or create workspace tasks to initiate your personal productivity analytics dashboard.</p>
           <div className="empty-state-ctas">
             <button className="btn-join" onClick={() => setCurrentTab('meetings')}>
-              📅 Schedule Call
+              Schedule Call
             </button>
             <button className="btn-join btn-secondary" onClick={() => setCurrentTab('workspace')}>
-              👥 Go to Kanban Board
+              Go to Kanban Board
             </button>
           </div>
         </div>
@@ -455,14 +461,19 @@ export default function AnalyticsDashboard({ setCurrentTab }) {
   return (
     <div className="dashboard-content container animate-fade-in">
       <div className="analytics-welcome-header">
-        <h1>📊 Performance Insights</h1>
+        <h1>Performance Insights</h1>
         <p>Optimize your focus and track team delivery metrics over time.</p>
       </div>
 
       {/* Overview Metric Cards */}
       <div className="analytics-metrics-grid">
         <div className="analytics-card metric-card hover-glow">
-          <div className="metric-icon blue-bg">🎥</div>
+          <div className="metric-icon blue-bg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 7l-7 5 7 5V7z" />
+              <rect x="1" y="5" width="15" height="14" rx="3" ry="3" />
+            </svg>
+          </div>
           <div className="metric-info">
             <span className="metric-label">Total Meetings</span>
             <span className="metric-value">{overview.totalMeetings}</span>
@@ -470,7 +481,12 @@ export default function AnalyticsDashboard({ setCurrentTab }) {
         </div>
 
         <div className="analytics-card metric-card hover-glow">
-          <div className="metric-icon violet-bg">⏱️</div>
+          <div className="metric-icon violet-bg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
           <div className="metric-info">
             <span className="metric-label">Meeting Hours</span>
             <span className="metric-value">{overview.totalHours}h</span>
@@ -478,7 +494,12 @@ export default function AnalyticsDashboard({ setCurrentTab }) {
         </div>
 
         <div className="analytics-card metric-card hover-glow">
-          <div className="metric-icon amber-bg">📋</div>
+          <div className="metric-icon amber-bg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+            </svg>
+          </div>
           <div className="metric-info">
             <span className="metric-label">Total Tasks</span>
             <span className="metric-value">{overview.totalTasks}</span>
@@ -486,7 +507,12 @@ export default function AnalyticsDashboard({ setCurrentTab }) {
         </div>
 
         <div className="analytics-card metric-card hover-glow">
-          <div className="metric-icon emerald-bg">✅</div>
+          <div className="metric-icon emerald-bg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 11 12 14 22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+          </div>
           <div className="metric-info">
             <span className="metric-label">Tasks Completed</span>
             <span className="metric-value">{overview.completedTasks}</span>
@@ -494,7 +520,13 @@ export default function AnalyticsDashboard({ setCurrentTab }) {
         </div>
 
         <div className="analytics-card metric-card hover-glow">
-          <div className="metric-icon indigo-bg">🤖</div>
+          <div className="metric-icon indigo-bg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 8V4H8" />
+              <rect width="16" height="12" x="4" y="8" rx="2" />
+              <path d="M2 14h2M20 14h2M15 13v2M9 13v2" />
+            </svg>
+          </div>
           <div className="metric-info">
             <span className="metric-label">AI Summaries</span>
             <span className="metric-value">{overview.aiSummaries}</span>

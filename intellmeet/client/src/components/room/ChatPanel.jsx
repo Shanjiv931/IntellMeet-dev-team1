@@ -20,7 +20,7 @@ export default function ChatPanel({
   return (
     <div className="chat-panel-container">
       <div className="chat-panel-header">
-        <span className="panel-title">💬 Live Chat</span>
+        <span className="panel-title">Live Chat</span>
         <span className="message-count">{messages.length} messages</span>
       </div>
 

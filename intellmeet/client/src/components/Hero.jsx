@@ -80,13 +80,13 @@ export default function Hero() {
 
               {/* Sidebar: AI Notes Panel */}
               <div className="mockup-sidebar">
-                <div className="sidebar-tab">🤖 IntellMeet AI</div>
+                <div className="sidebar-tab">IntellMeet AI</div>
                 <div className="sidebar-section">
                   <div className="sidebar-section-title">REAL-TIME SUMMARY</div>
                   <div className="summary-bullet">Discussing Sprint 14 goals and API integration timelines.</div>
                 </div>
                 <div className="sidebar-section">
-                  <div className="sidebar-section-title">✅ ACTION ITEMS</div>
+                  <div className="sidebar-section-title">ACTION ITEMS</div>
                   <div className="task-item">
                     <input type="checkbox" defaultChecked disabled />
                     <span>Alex: Create endpoints for auth</span>

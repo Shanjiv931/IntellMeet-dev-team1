@@ -118,12 +118,10 @@ export default function Login({ onNavigate, onLoginSuccess }) {
               <p>Next-generation meeting intelligence, live WebRTC video, and instant AI-generated team actions.</p>
             </div>
             <div className="glass-card sub-glass glass-left">
-              <span className="glass-icon">⚡</span>
               <span>Sub-200ms Latency</span>
             </div>
             <div className="glass-card sub-glass glass-right">
-              <span className="glass-icon">🤖</span>
-              <span>Gemini AI Insights</span>
+              <span>AI Insights</span>
             </div>
           </div>
         </div>

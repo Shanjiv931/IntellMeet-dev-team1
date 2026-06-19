@@ -84,7 +84,6 @@ export default function AccountSettings({
         <div className="sessions-list">
           {sessions.map((sess) => (
             <div key={sess._id} className="session-item">
-              <div className="session-icon">💻</div>
               <div className="session-details">
                 <div className="session-header-row">
                   <span className="session-device">{sess.device || 'Unknown Device'}</span>

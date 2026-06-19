@@ -82,7 +82,7 @@ export default function Features() {
               {activeTab === 0 && (
                 <div className="preview-content animate-fade">
                   <div className="preview-header">
-                    <h4>🤖 IntellMeet Smart Summary</h4>
+                    <h4>IntellMeet Smart Summary</h4>
                     <span className="status-badge">Completed</span>
                   </div>
                   <div className="preview-body-content">
@@ -93,8 +93,8 @@ export default function Features() {
                     <div className="summary-bullets">
                       <h5>Key Decisions</h5>
                       <ul>
-                        <li>🎯 Use Postgres for core database infrastructure.</li>
-                        <li>🎯 Implement Vite as front-end builder for speed.</li>
+                        <li>Use Postgres for core database infrastructure.</li>
+                        <li>Implement Vite as front-end builder for speed.</li>
                       </ul>
                     </div>
                   </div>
@@ -104,7 +104,7 @@ export default function Features() {
               {activeTab === 1 && (
                 <div className="preview-content animate-fade">
                   <div className="preview-header">
-                    <h4>🎙️ Live Transcription Stream</h4>
+                    <h4>Live Transcription Stream</h4>
                     <span className="status-badge listening">Listening...</span>
                   </div>
                   <div className="preview-body-content">
@@ -125,7 +125,7 @@ export default function Features() {
               {activeTab === 2 && (
                 <div className="preview-content animate-fade">
                   <div className="preview-header">
-                    <h4>🔌 Direct Tool Integrations</h4>
+                    <h4>Direct Tool Integrations</h4>
                     <span className="status-badge sync">Synced</span>
                   </div>
                   <div className="preview-body-content">
@@ -157,17 +157,31 @@ export default function Features() {
         {/* Enterprise Perks grid */}
         <div className="features-grid">
           <div className="feature-card">
-            <div className="card-icon">🔒</div>
+            <div className="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
             <h4 className="card-title">Enterprise Security</h4>
             <p className="card-desc">End-to-end data encryption and compliant with GDPR, SOC2, and HIPAA regulations.</p>
           </div>
           <div className="feature-card">
-            <div className="card-icon">📊</div>
+            <div className="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+              </svg>
+            </div>
             <h4 className="card-title">Meeting Analytics</h4>
             <p className="card-desc">Analyze speaking ratios, sentiment patterns, and timeline highlights to optimize agendas.</p>
           </div>
           <div className="feature-card">
-            <div className="card-icon">⚡</div>
+            <div className="card-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            </div>
             <h4 className="card-title">Sub-second Latency</h4>
             <p className="card-desc">Ultra-clear audio and video streams supported by global edge infrastructure.</p>
           </div>
