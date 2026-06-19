@@ -804,6 +804,16 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
           background-color: var(--bg-main);
           border-bottom: 1px solid var(--border-color);
         }
+        .intelligence-grid {
+          display: grid;
+          grid-template-columns: 1fr 2.2fr !important;
+          gap: 24px;
+        }
+        @media (max-width: 991px) {
+          .intelligence-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
         .action-card {
           position: relative;
           overflow: hidden;
@@ -1229,7 +1239,7 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
               <p>Review rich summaries, structured action checklists, and full transcripts saved in MongoDB Atlas.</p>
             </div>
 
-            <div className="widgets-grid" style={{ gridTemplateColumns: '1fr 2fr' }}>
+            <div className="widgets-grid intelligence-grid">
               {/* Left Column: Meetings History Selector */}
               <div className="widget-card" style={{ height: 'max-content' }}>
                 <div className="widget-header">
@@ -1268,7 +1278,7 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
               <div className="widget-card">
                 {currentSummaryItem ? (
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '20px' }}>
                       <div>
                         <h2 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-main)' }}>{currentSummaryItem.title}</h2>
                         <span style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -1279,7 +1289,7 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
                     </div>
 
                     {/* Quick Specs */}
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-alt)', padding: '14px', borderRadius: '6px', fontSize: '13px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px', backgroundColor: 'var(--bg-alt)', padding: '14px', borderRadius: '6px', fontSize: '13px', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>Host:</strong> {currentSummaryItem.host?.name || "IntellMeet Admin"}</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <strong>Duration:</strong> {currentSummaryItem.duration || 30} mins</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> <strong>State:</strong> Persistent MongoDB Atlas</div>
@@ -1316,10 +1326,10 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
                       <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981' }}><polyline points="20 6 9 17 4 12"/></svg> Key Action Items Checklist
                       </h3>
-                      <div style={{ backgroundColor: 'white', border: '1px solid var(--border-light)', borderRadius: '6px', padding: '16px' }}>
+                      <div style={{ backgroundColor: 'var(--bg-alt)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '16px' }}>
                         {currentSummaryItem.actionItems && currentSummaryItem.actionItems.length > 0 ? (
-                          currentSummaryItem.actionItems.map((item, idx) => (
-                            <div className="action-item-check" key={item._id || idx} style={{ padding: '8px 0', borderBottom: idx < currentSummaryItem.actionItems.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                           currentSummaryItem.actionItems.map((item, idx) => (
+                            <div className="action-item-check" key={item._id || idx} style={{ padding: '8px 0', borderBottom: idx < currentSummaryItem.actionItems.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
                               <input 
                                 type="checkbox" 
                                 checked={item.completed} 
@@ -1333,7 +1343,7 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
                               >
                                 <span>{item.text}</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  {item.assignee && <span style={{ fontSize: '11px', color: 'var(--text-muted)', backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>{item.assignee}</span>}
+                                  {item.assignee && <span style={{ fontSize: '11px', color: 'var(--text-muted)', backgroundColor: 'var(--bg-main)', padding: '2px 6px', borderRadius: '4px' }}>{item.assignee}</span>}
                                   <button 
                                     onClick={(e) => {
                                       e.preventDefault();
