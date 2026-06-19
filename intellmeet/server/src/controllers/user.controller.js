@@ -34,7 +34,7 @@ export const getUserSettings = async (req, res, next) => {
       settings = {
         _id: new mongoose.Types.ObjectId().toString(),
         user: userId,
-        theme: 'dark',
+        theme: 'light',
         notifications: {
           email: true,
           meetingReminders: true,
@@ -87,7 +87,7 @@ export const updateUserSettings = async (req, res, next) => {
       settings = {
         _id: new mongoose.Types.ObjectId().toString(),
         user: userId,
-        theme: 'dark',
+        theme: 'light',
         notifications: {
           email: true,
           meetingReminders: true,

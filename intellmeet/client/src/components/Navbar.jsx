@@ -29,11 +29,14 @@ export default function Navbar({ onNavigate }) {
           <button className="btn-signup" onClick={() => onNavigate('signup')}>Get Started Free</button>
         </div>
 
-        <button className="nav-toggle" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
-          <span className={`bar ${isOpen ? 'active' : ''}`}></span>
-          <span className={`bar ${isOpen ? 'active' : ''}`}></span>
-          <span className={`bar ${isOpen ? 'active' : ''}`}></span>
-        </button>
+        <div className="nav-mobile-actions">
+          <button className="btn-signin-mobile" onClick={() => onNavigate('login')}>Sign In</button>
+          <button className="nav-toggle" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
+            <span className={`bar ${isOpen ? 'active' : ''}`}></span>
+            <span className={`bar ${isOpen ? 'active' : ''}`}></span>
+            <span className={`bar ${isOpen ? 'active' : ''}`}></span>
+          </button>
+        </div>
       </div>
     </nav>
   );

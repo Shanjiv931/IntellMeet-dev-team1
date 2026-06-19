@@ -41,3 +41,9 @@
     max-width: 800px;
   }
 }
+
+@media (max-width: 1024px) {
+  .room-video-wrapper.sidebar-active .video-area-grid {
+    grid-template-columns: 1fr;
+  }
+}

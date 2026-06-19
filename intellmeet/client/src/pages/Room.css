@@ -121,6 +121,13 @@
   }
 }
 
+.room-video-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 /* Responsive Overrides */
 @media (max-width: 768px) {
   .room-sidebar {
@@ -130,7 +137,7 @@
     bottom: 0;
     height: 100%;
     width: 100%;
-    max-width: 380px;
+    max-width: 100%;
     z-index: 50;
     box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
     animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -138,6 +145,10 @@
 
   .sidebar-close-btn {
     display: block; /* Visible on mobile */
+  }
+
+  .room-video-wrapper.sidebar-active {
+    display: none;
   }
 }
 

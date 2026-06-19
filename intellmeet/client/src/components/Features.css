@@ -42,7 +42,7 @@
   grid-template-columns: 1fr 1.2fr;
   gap: 48px;
   align-items: center;
-  background: white;
+  background: var(--bg-main);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 36px;
@@ -161,7 +161,7 @@
 }
 
 .summary-card {
-  background: white;
+  background: var(--bg-main);
   border: 1px solid var(--border-color);
   padding: 12px;
   border-radius: var(--radius-sm);
@@ -170,7 +170,7 @@
 .summary-card h5, .summary-bullets h5 {
   font-size: 11px;
   font-weight: 700;
-  color: #64748b;
+  color: var(--text-muted);
   margin-bottom: 4px;
   text-transform: uppercase;
 }
@@ -206,7 +206,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: white;
+  background: var(--bg-main);
   border: 1px solid var(--border-color);
   padding: 10px;
   border-radius: var(--radius-sm);
@@ -262,7 +262,7 @@
 }
 
 .feature-card {
-  background: white;
+  background: var(--bg-main);
   border: 1px solid var(--border-color);
   padding: 32px;
   border-radius: var(--radius-md);

@@ -104,7 +104,7 @@
 
 .copyright {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .bottom-links {
@@ -114,7 +114,7 @@
 
 .bottom-links a {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-muted);
   transition: color 0.2s ease;
 }
 

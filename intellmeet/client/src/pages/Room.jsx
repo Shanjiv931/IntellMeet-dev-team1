@@ -578,16 +578,18 @@ export default function Room({ onNavigate, user, meeting }) {
       {/* Main Container */}
       <div className="room-main-container">
         {/* Video Area Grid */}
-        <VideoGrid 
-          user={safeUser} 
-          isMuted={isMuted} 
-          isCameraOff={isCameraOff} 
-          isSharingScreen={isSharingScreen} 
-          localStream={localStream}
-          screenStream={screenStream}
-          peersList={peersList}
-          remoteStreams={remoteStreams}
-        />
+        <div className={`room-video-wrapper ${showSidebar ? 'sidebar-active' : ''}`}>
+          <VideoGrid 
+            user={safeUser} 
+            isMuted={isMuted} 
+            isCameraOff={isCameraOff} 
+            isSharingScreen={isSharingScreen} 
+            localStream={localStream}
+            screenStream={screenStream}
+            peersList={peersList}
+            remoteStreams={remoteStreams}
+          />
+        </div>
 
         {/* Right Sidebar Panel */}
         {showSidebar && (

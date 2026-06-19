@@ -33,7 +33,7 @@ function App() {
   const [activeMeeting, setActiveMeeting] = useState(null);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('intellmeet_theme') || 'dark';
+    const savedTheme = localStorage.getItem('intellmeet_theme') || 'light';
     let activeTheme = savedTheme;
     if (savedTheme === 'system') {
       activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

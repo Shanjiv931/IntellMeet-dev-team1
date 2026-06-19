@@ -1,8 +1,8 @@
 .pricing-section {
   padding: 100px 0;
   position: relative;
-  background: var(--bg-dark);
-  border-top: 1px solid var(--border-light);
+  background: var(--pricing-bg);
+  border-top: 1px solid var(--border-color);
 }
 
 .pricing-grid {
@@ -13,10 +13,10 @@
 }
 
 .pricing-card {
-  background: rgba(30, 41, 59, 0.4);
+  background: var(--pricing-card-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--pricing-card-border);
   border-radius: 16px;
   padding: 40px 30px;
   display: flex;
@@ -69,7 +69,7 @@
   font-size: 48px;
   font-weight: 900;
   color: var(--text-main);
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  background: var(--pricing-price-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -138,9 +138,9 @@
 }
 
 .pricing-card:not(.popular) .btn-pricing-cta {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--pricing-btn-bg);
   color: var(--text-main);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--pricing-btn-border);
 }
 
 .pricing-card:not(.popular) .btn-pricing-cta:hover {

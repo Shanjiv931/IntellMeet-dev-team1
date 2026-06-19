@@ -72,7 +72,7 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
   const [aiSummaryNotif, setAiSummaryNotif] = useState(true);
   
   // Appearance tab states
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [compactMode, setCompactMode] = useState(false);
   const [fontSize, setFontSize] = useState('medium');
   

@@ -1,7 +1,7 @@
 .resources-section {
   padding: 100px 0;
-  background: var(--bg-dark);
-  border-top: 1px solid var(--border-light);
+  background: var(--pricing-bg);
+  border-top: 1px solid var(--border-color);
 }
 
 .resources-grid {
@@ -12,8 +12,8 @@
 }
 
 .resource-card {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--pricing-card-bg);
+  border: 1px solid var(--pricing-card-border);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -57,7 +57,7 @@
 
 .resource-footer {
   margin-top: auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--pricing-card-border);
   padding: 20px 30px;
 }
 

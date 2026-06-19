@@ -16,7 +16,7 @@ backend:
       memory: 256Mi
   # Credentials matching database / JWT tokens secrets
   secrets:
-    mongoUri: "mongodb+srv://admin:pass@cluster.mongodb.net/intellmeet"
+    mongoUri: "mongodb+srv://<username>:<password>@cluster.mongodb.net/intellmeet"
     jwtSecret: "intellmeet_access_token_secret_secure_key_at_least_32_chars"
     jwtRefreshSecret: "intellmeet_refresh_token_secret_secure_key_at_least_32_chars"
 

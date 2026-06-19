@@ -678,7 +678,7 @@ We have finalized a major set of core platform features to ensure the platform i
    cd IntellMeet-dev-team1
    ```
 2. Setup Environment Variables:
-   Create `intellmeet/server/.env` matching the checklist below.
+   Create `intellmeet/server/.env` based on `intellmeet/server/.env.example`.
 3. Install Dependencies & Start dev servers:
    * Backend:
      ```bash

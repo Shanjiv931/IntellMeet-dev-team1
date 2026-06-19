@@ -186,7 +186,7 @@
 
 /* Task Card Design */
 .task-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-alt);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 14px;
@@ -197,8 +197,7 @@
 
 .task-card:hover {
   transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--primary);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
@@ -352,13 +351,13 @@
 }
 
 .kanban-modal-box {
-  background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   width: 460px;
   max-width: 90%;
   padding: 24px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-xl);
   animation: modalFadeIn 0.2s ease-out;
 }
 
@@ -370,7 +369,7 @@
 .kanban-modal-box h3 {
   font-size: 18px;
   font-weight: 800;
-  color: white;
+  color: var(--text-main);
   margin-bottom: 20px;
 }
 
@@ -389,14 +388,14 @@
 .form-group label {
   font-size: 12.5px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .form-group input, .form-group textarea {
-  background: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-alt);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  color: white;
+  color: var(--text-main);
   padding: 10px;
   font-size: 13.5px;
 }
@@ -420,9 +419,9 @@
 }
 
 .btn-cancel {
-  background: rgba(255, 255, 255, 0.08);
-  border: none;
-  color: #94a3b8;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
   padding: 10px 18px;
   border-radius: 8px;
   cursor: pointer;
@@ -432,8 +431,8 @@
 }
 
 .btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
+  background: var(--border-color);
+  color: var(--text-main);
 }
 
 .btn-submit {

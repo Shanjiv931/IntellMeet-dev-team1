@@ -16,7 +16,7 @@ const UserSettingsSchema = new mongoose.Schema(
     aiSummaryNotifications: { type: Boolean, default: true },
 
     // Appearance Tab
-    theme: { type: String, enum: ['light', 'dark', 'system'], default: 'dark' },
+    theme: { type: String, enum: ['light', 'dark', 'system'], default: 'light' },
     compactMode: { type: Boolean, default: false },
     fontSize: { type: String, enum: ['small', 'medium', 'large'], default: 'medium' },
 

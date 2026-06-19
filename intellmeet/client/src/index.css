@@ -16,11 +16,19 @@
   --radius-md: 12px;
   --radius-lg: 18px;
   --max-width: 1200px;
+  
+  /* Theme tokens for pricing/resources */
+  --pricing-bg: var(--bg-alt);
+  --pricing-card-bg: var(--bg-main);
+  --pricing-card-border: var(--border-color);
+  --pricing-price-gradient: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+  --pricing-btn-bg: #f1f5f9;
+  --pricing-btn-border: #cbd5e1;
 }
 
 body.dark-theme, .dark-theme {
   --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --text-muted: #cbd5e1;
   --bg-main: #0f172a;
   --bg-alt: #1e293b;
   --border-color: #334155;
@@ -30,6 +38,14 @@ body.dark-theme, .dark-theme {
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+
+  /* Dark theme overrides for pricing/resources */
+  --pricing-bg: var(--bg-main);
+  --pricing-card-bg: var(--bg-alt);
+  --pricing-card-border: rgba(255, 255, 255, 0.05);
+  --pricing-price-gradient: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  --pricing-btn-bg: rgba(255, 255, 255, 0.05);
+  --pricing-btn-border: rgba(255, 255, 255, 0.1);
 }
 
 * {
