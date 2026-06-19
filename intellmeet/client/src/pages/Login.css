@@ -219,23 +219,132 @@
   color: #94a3b8;
 }
 
-.metrics-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 32px;
+/* Abstract Showcase Graphic */
+.abstract-showcase {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.metric-number {
-  font-size: 28px;
+.floating-sphere {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  z-index: 1;
+  opacity: 0.6;
+  animation: float 6s ease-in-out infinite;
+}
+
+.sphere-1 {
+  width: 120px;
+  height: 120px;
+  background: var(--primary);
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.sphere-2 {
+  width: 140px;
+  height: 140px;
+  background: #a78bfa;
+  bottom: 10%;
+  right: 10%;
+  animation-delay: 3s;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  color: white;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.main-glass {
+  width: 320px;
+  padding: 28px;
+  text-align: left;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  margin-bottom: 18px;
+}
+
+.brand-logo {
+  color: #60a5fa;
+}
+
+.main-glass h3 {
+  font-size: 20px;
   font-weight: 800;
-  display: block;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.metric-label {
-  font-size: 12px;
+.main-glass p {
+  font-size: 13.5px;
   color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.sub-glass {
+  position: absolute;
+  padding: 12px 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--radius-sm);
+}
+
+.glass-left {
+  top: 15%;
+  left: -20px;
+  transform: rotate(-4deg);
+}
+
+.glass-left:hover {
+  transform: rotate(-4deg) translateY(-4px);
+}
+
+.glass-right {
+  bottom: 15%;
+  right: -20px;
+  transform: rotate(4deg);
+}
+
+.glass-right:hover {
+  transform: rotate(4deg) translateY(-4px);
+}
+
+.glass-icon {
+  font-size: 14px;
 }
 
 @media (max-width: 991px) {

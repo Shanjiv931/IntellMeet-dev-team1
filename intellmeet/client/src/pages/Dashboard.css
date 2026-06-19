@@ -552,9 +552,19 @@
   transition: border-color 0.2s ease;
 }
 
+.settings-select option {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
 .light-theme .settings-input, .light-theme .settings-select {
   background: white;
   border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.light-theme .settings-select option {
+  background-color: white;
   color: #0f172a;
 }
 

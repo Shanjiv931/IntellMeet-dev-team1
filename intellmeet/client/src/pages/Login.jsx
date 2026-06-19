@@ -99,32 +99,31 @@ export default function Login({ onNavigate, onLoginSuccess }) {
         </div>
       </div>
 
-      {/* Right panel: Marketing/Testimonial side */}
+      {/* Right panel: Premium Abstract Visualization */}
       <div className="login-visual-panel">
         <div className="visual-glow"></div>
         <div className="visual-content">
-          <div className="quote-card">
-            <div className="stars">★★★★★</div>
-            <p className="quote-text">
-              "IntellMeet's real-time transcription and automatic Groq summaries have completely eliminated manual meeting documentation for our team. The live duration tracking and persistent history are exceptionally reliable."
-            </p>
-            <div className="quote-author">
-              <div className="author-avatar">SJ</div>
-              <div>
-                <div className="author-name">Sarah Jenkins</div>
-                <div className="author-title">Senior Engineering Manager, CloudSync</div>
+          <div className="abstract-showcase">
+            <div className="floating-sphere sphere-1"></div>
+            <div className="floating-sphere sphere-2"></div>
+            <div className="glass-card main-glass">
+              <div className="brand-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="brand-logo" style={{ marginRight: '4px' }}>
+                  <path d="M23 7l-7 5 7 5V7z" />
+                  <rect x="1" y="5" width="15" height="14" rx="3" ry="3" />
+                </svg>
+                <span>INTELLMEET AI</span>
               </div>
+              <h3>Collaborate & Automate</h3>
+              <p>Next-generation meeting intelligence, live WebRTC video, and instant AI-generated team actions.</p>
             </div>
-          </div>
-          
-          <div className="metrics-row">
-            <div className="metric-box">
-              <span className="metric-number">99.8%</span>
-              <span className="metric-label">Transcription Accuracy</span>
+            <div className="glass-card sub-glass glass-left">
+              <span className="glass-icon">⚡</span>
+              <span>Sub-200ms Latency</span>
             </div>
-            <div className="metric-box">
-              <span className="metric-number">10k+</span>
-              <span className="metric-label">Meetings Summarized</span>
+            <div className="glass-card sub-glass glass-right">
+              <span className="glass-icon">🤖</span>
+              <span>Gemini AI Insights</span>
             </div>
           </div>
         </div>
