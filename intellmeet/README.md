@@ -41,19 +41,19 @@ graph TD
     subgraph "Server Application (Render / Railway / AWS)"
         Express["Express MVC Middleware Pipeline"]
         MeetingCRUD["Meeting CRUD Handlers"]
-        AuthRot["Auth /refresh & /avatar Routing"]
+        AuthRot["Auth /refresh and /avatar Routing"]
         SocketServer["Socket.io Server (WebRTC Signals)"]
         CacheService["Cache Service (Redis / Local Memory)"]
         DBService["Resilient DB Connection Gateway"]
       end
 
     subgraph "Managed Cloud Infrastructure"
-        MongoDB[("MongoDB Atlas Sharded Cluster")]
-        Redis[("Upstash / Redis Labs Cloud Cache")]
-        Cloudinary[("Cloudinary Media CDN")]
+        MongoDB["MongoDB Atlas Sharded Cluster"]
+        Redis["Upstash / Redis Labs Cloud Cache"]
+        Cloudinary["Cloudinary Media CDN"]
       end
 
-    React -->|Interactions & State| API
+    React -->|Interactions and State| API
     React -->|Real-Time WebRTC Streams| SocketClient
     API -->|Secure HTTPS Requests| Express
     SocketClient -->|SDP Offers / ICE candidates| SocketServer
