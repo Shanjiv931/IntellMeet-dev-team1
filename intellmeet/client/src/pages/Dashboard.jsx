@@ -791,15 +791,17 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
     <div className="dashboard-layout">
       {/* Dynamic Embedded Styles for Premium Aesthetics */}
       <style>{`
-        .quick-actions-grid {
-          grid-template-columns: repeat(4, 1fr) !important;
+        @media (min-width: 992px) {
+          .quick-actions-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+          }
         }
         .completed-text {
           text-decoration: line-through;
           opacity: 0.5;
         }
         .db-navbar {
-          background-color: #ffffff;
+          background-color: var(--bg-main);
           border-bottom: 1px solid var(--border-color);
         }
         .action-card {
