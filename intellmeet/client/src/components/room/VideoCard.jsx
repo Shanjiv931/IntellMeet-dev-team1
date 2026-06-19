@@ -71,8 +71,12 @@ export default function VideoCard({
           </div>
         ) : isCameraOff ? (
           <div className="video-off-container">
-            <div className="avatar-ellipse">
-              <span className="avatar-initials">{initials}</span>
+            <div className="avatar-ellipse" style={initials && (initials.startsWith('http') || initials.startsWith('/')) ? { padding: 0, overflow: 'hidden' } : {}}>
+              {initials && (initials.startsWith('http') || initials.startsWith('/')) ? (
+                <img src={initials} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              ) : (
+                <span className="avatar-initials">{initials}</span>
+              )}
             </div>
             <span className="video-off-indicator">Camera Off</span>
           </div>
@@ -115,8 +119,12 @@ export default function VideoCard({
                 </span>
               </div>
             )}
-            <div className="feed-avatar-glow">
-              <span className="feed-initials">{initials}</span>
+            <div className="feed-avatar-glow" style={initials && (initials.startsWith('http') || initials.startsWith('/')) ? { padding: 0, overflow: 'hidden' } : {}}>
+              {initials && (initials.startsWith('http') || initials.startsWith('/')) ? (
+                <img src={initials} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              ) : (
+                <span className="feed-initials">{initials}</span>
+              )}
             </div>
             {/* Visual audio wave representation for active speaker */}
             {isActiveSpeaker && (

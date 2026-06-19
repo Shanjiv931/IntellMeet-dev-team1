@@ -14,7 +14,7 @@ import AnalyticsDashboard from '../components/analytics/AnalyticsDashboard';
 import api from '../utils/api';
 import './Dashboard.css';
 
-export default function Dashboard({ onNavigate, user, activeMeeting }) {
+export default function Dashboard({ onNavigate, user, activeMeeting, onUserUpdate }) {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [meetings, setMeetings] = useState([]);
   const [selectedSummary, setSelectedSummary] = useState(0);
@@ -292,6 +292,13 @@ export default function Dashboard({ onNavigate, user, activeMeeting }) {
       });
       if (response.success) {
         showToast('Profile updated successfully!');
+        if (onUserUpdate) {
+          onUserUpdate({
+            name: profileName,
+            email: profileEmail,
+            avatar: profileAvatar
+          });
+        }
         fetchProfile();
       }
     } catch (err) {

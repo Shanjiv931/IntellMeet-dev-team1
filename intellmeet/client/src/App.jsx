@@ -64,12 +64,13 @@ function App() {
       if (token && currentUser) {
         try {
           const res = await api.get('/auth/me');
+          const initials = res.data.user.name ? res.data.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
           const verifiedUser = {
-            id: res.data.user.id,
+            id: res.data.user.id || res.data.user._id,
             name: res.data.user.name,
             email: res.data.user.email,
             role: res.data.user.role,
-            avatar: res.data.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+            avatar: res.data.user.avatar || initials
           };
           setCurrentUser(verifiedUser);
           if (localStorage.getItem('intellmeet_access_token')) {
@@ -81,13 +82,35 @@ function App() {
           }
         } catch (err) {
           console.warn('Session verification failed. Token might be expired.', err);
-          // Api client handles clearing on hard 401, but we can fallback here if needed
         }
       }
     };
     verifySession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleUserUpdate = (updatedFields) => {
+    if (!currentUser) return;
+    const nameToUse = updatedFields.name !== undefined ? updatedFields.name : currentUser.name;
+    const initials = nameToUse ? nameToUse.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
+    
+    const newUserData = {
+      ...currentUser,
+      ...updatedFields,
+      avatar: updatedFields.avatar !== undefined ? (updatedFields.avatar || initials) : currentUser.avatar
+    };
+    setCurrentUser(newUserData);
+    
+    try {
+      if (localStorage.getItem('intellmeet_access_token')) {
+        localStorage.setItem('intellmeet_user', JSON.stringify(newUserData));
+      } else {
+        sessionStorage.setItem('intellmeet_user', JSON.stringify(newUserData));
+      }
+    } catch (e) {
+      console.error('Failed to sync updated user session in storage', e);
+    }
+  };
 
   const handleNavigate = (targetView, meetingData = null) => {
     if (meetingData) {
@@ -112,7 +135,7 @@ function App() {
       name: user.name,
       email: user.email,
       role: user.role || "Member",
-      avatar: initials || "U"
+      avatar: user.avatar || initials || "U"
     };
     
     setCurrentUser(formattedUser);
@@ -139,7 +162,7 @@ function App() {
       name: user.name,
       email: user.email,
       role: user.role || "Member",
-      avatar: initials || "U"
+      avatar: user.avatar || initials || "U"
     };
  
     setCurrentUser(formattedUser);
@@ -169,7 +192,7 @@ function App() {
   }
 
   if (view === 'dashboard') {
-    return <Dashboard onNavigate={handleNavigate} user={currentUser} activeMeeting={activeMeeting} />;
+    return <Dashboard onNavigate={handleNavigate} user={currentUser} activeMeeting={activeMeeting} onUserUpdate={handleUserUpdate} />;
   }
 
   return <LandingPage onNavigate={handleNavigate} />;

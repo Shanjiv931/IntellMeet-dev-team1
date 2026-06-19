@@ -30,7 +30,13 @@ export default function ChatPanel({
           return (
             <div className={`chat-message-bubble ${isUser ? 'user-message' : ''}`} key={idx}>
               <div className="msg-avatar-wrapper">
-                <div className="msg-avatar">{msg.initials}</div>
+                <div className="msg-avatar" style={msg.initials && (msg.initials.startsWith('http') || msg.initials.startsWith('/')) ? { padding: 0, overflow: 'hidden' } : {}}>
+                  {msg.initials && (msg.initials.startsWith('http') || msg.initials.startsWith('/')) ? (
+                    <img src={msg.initials} alt={msg.sender} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    msg.initials
+                  )}
+                </div>
               </div>
               <div className="msg-bubble-content">
                 <div className="msg-meta">

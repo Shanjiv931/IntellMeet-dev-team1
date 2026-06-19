@@ -65,8 +65,12 @@ export default function ParticipantsPanel({
         {filteredParticipants.map((p) => (
           <div className="participant-row" key={p.id}>
             <div className="participant-row-left">
-              <div className={`participant-row-avatar ${p.avatarBg}`}>
-                {p.initials}
+              <div className={`participant-row-avatar ${p.avatarBg}`} style={p.initials && (p.initials.startsWith('http') || p.initials.startsWith('/')) ? { padding: 0, overflow: 'hidden' } : {}}>
+                {p.initials && (p.initials.startsWith('http') || p.initials.startsWith('/')) ? (
+                  <img src={p.initials} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  p.initials
+                )}
               </div>
               <div className="participant-row-info">
                 <span className="row-name">{p.name}</span>

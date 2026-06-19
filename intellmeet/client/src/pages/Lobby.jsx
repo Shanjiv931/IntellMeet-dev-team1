@@ -251,9 +251,16 @@ export default function Lobby({ onNavigate, user, meeting }) {
                   activeParticipants.map((p, idx) => {
                     const pName = typeof p === 'object' ? (p.name || 'Anonymous User') : 'User';
                     const pInitials = typeof p === 'object' ? (p.avatar || pName.split(' ').map(n=>n[0]).join('').substring(0, 2).toUpperCase()) : 'U';
+                    const hasImage = pInitials.startsWith('http') || pInitials.startsWith('/');
                     return (
                       <div className="participant-row" key={p._id || p.id || idx}>
-                        <div className="p-avatar active">{pInitials}</div>
+                        <div className="p-avatar active" style={hasImage ? { padding: 0, overflow: 'hidden' } : {}}>
+                          {hasImage ? (
+                            <img src={pInitials} alt={pName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            pInitials
+                          )}
+                        </div>
                         <span className="p-name">{pName}</span>
                         <span className="p-status">Connected</span>
                       </div>

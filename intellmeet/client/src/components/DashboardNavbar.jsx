@@ -121,7 +121,13 @@ export default function DashboardNavbar({
         </div>
 
         <div className="user-profile">
-          <div className="user-avatar">{safeUser.avatar}</div>
+          <div className="user-avatar" style={safeUser.avatar && (safeUser.avatar.startsWith('http') || safeUser.avatar.startsWith('/')) ? { padding: 0, overflow: 'hidden' } : {}}>
+            {safeUser.avatar && (safeUser.avatar.startsWith('http') || safeUser.avatar.startsWith('/')) ? (
+              <img src={safeUser.avatar} alt={safeUser.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              safeUser.avatar
+            )}
+          </div>
           <div className="user-details">
             <span className="user-name">{safeUser.name}</span>
             <span className="user-role">{safeUser.role}</span>

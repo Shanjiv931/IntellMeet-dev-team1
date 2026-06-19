@@ -288,10 +288,14 @@ export default function WorkspaceKanban() {
                         <div className="task-card-footer">
                           {/* Assignee Badge */}
                           <div className="task-assignee">
-                            <span className="assignee-avatar">
-                              {task.assignee?.name 
-                                ? task.assignee.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-                                : task.assigneeName ? task.assigneeName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
+                            <span className="assignee-avatar" style={task.assignee?.avatar && (task.assignee.avatar.startsWith('http') || task.assignee.avatar.startsWith('/')) ? { padding: 0, overflow: 'hidden' } : {}}>
+                              {task.assignee?.avatar && (task.assignee.avatar.startsWith('http') || task.assignee.avatar.startsWith('/')) ? (
+                                <img src={task.assignee.avatar} alt={task.assignee.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                              ) : (
+                                task.assignee?.name 
+                                  ? task.assignee.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                                  : task.assigneeName ? task.assigneeName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'
+                              )}
                             </span>
                             <span className="assignee-name" title={task.assignee?.name || task.assigneeName}>
                               {task.assignee?.name || task.assigneeName || 'Unassigned'}
