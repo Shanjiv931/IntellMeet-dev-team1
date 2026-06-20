@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Lobby.css';
 
-export default function Lobby({ onNavigate, user, meeting }) {
+export default function Lobby({ onNavigate, user: _user, meeting }) {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
@@ -10,7 +10,6 @@ export default function Lobby({ onNavigate, user, meeting }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
-  const safeUser = user || { name: "Guest User", role: "Guest", avatar: "GU" };
 
   const meetingTitle = meeting?.title || "Instant Sync Session";
   const meetingDesc = meeting?.description || "Align on quarterly strategy timelines, review marketing outlines, and establish developer OKR matrices.";

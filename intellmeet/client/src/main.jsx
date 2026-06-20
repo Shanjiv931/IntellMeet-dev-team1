@@ -21,7 +21,7 @@ if (sentryDsn) {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     {sentryDsn ? (
-      <Sentry.ErrorBoundary fallback={({ error }) => (
+      <Sentry.ErrorBoundary fallback={({ error: _error }) => (
         <div style={{ padding: '2rem', color: '#ef4444', backgroundColor: '#0b0f19', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif' }}>
           <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '2.5rem', maxWidth: '480px', textAlign: 'center', boxShadow: '0 8px 32px 0 rgba(0,0,0,0.37)' }}>
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#f87171', marginBottom: '1.5rem' }}>

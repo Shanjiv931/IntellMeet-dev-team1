@@ -13,7 +13,7 @@ export default function ResetPassword({ onNavigate, token }) {
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
-  const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':",./\\|?~`<>]/.test(password);
+  const hasSymbol = /[!@#$%^&*()_+\-=[\]{};':",./\\|?~`<>]/.test(password);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
