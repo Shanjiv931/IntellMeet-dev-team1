@@ -715,3 +715,7 @@ We have finalized a major set of core platform features to ensure the platform i
    * `fix:` for patches (e.g. `fix(db): escape regex parameters`)
    * `docs:` for README improvements
 3. Pull Request Policy: Keep branches updated and merge only after peer approvals and CI validation checkmarks clear.
+
+Test User:
+username: test@user.com
+password: ABCDabcd1$
