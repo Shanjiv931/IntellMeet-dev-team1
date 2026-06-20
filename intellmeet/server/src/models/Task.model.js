@@ -56,7 +56,7 @@ const TaskSchema = new mongoose.Schema(
 
 // Populate assignee info automatically
 TaskSchema.pre(/^find/, function (next) {
-  this.populate('assignee', 'name email role');
+  this.populate('assignee', 'name email role avatar');
   next();
 });
 

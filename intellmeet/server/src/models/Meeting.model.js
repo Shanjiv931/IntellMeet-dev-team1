@@ -88,7 +88,7 @@ const MeetingSchema = new mongoose.Schema(
 
 // Auto-populate host to save repetitive querying logic in controller
 MeetingSchema.pre(/^find/, function (next) {
-  this.populate('host', 'name email role');
+  this.populate('host', 'name email role avatar');
   next();
 });
 

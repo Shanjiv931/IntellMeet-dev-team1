@@ -37,7 +37,8 @@ const startServer = async () => {
     // Compile database collections and seed indexes on boot automatically once connected
     await seedDatabaseSilent();
   } catch (err) {
-    logger.error('MongoDB initial connection/seeding failed:', err);
+    logger.error('MongoDB initial connection/seeding failed. Halting server startup:', err);
+    process.exit(1);
   }
 
   server.listen(PORT, () => {
