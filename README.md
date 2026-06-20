@@ -659,13 +659,19 @@ We have finalized a major set of core platform features to ensure the platform i
 * **Live Audio Visual Feedback**: Programmed a Web Audio API frequency analyser and volume level meter that oscillates dynamically to give visual confirmation of mic status.
 * **Preference Propagation**: Saved preferences are stored and automatically applied to the active room on join.
 
-### 4. Global Dark & Light Theme System
+### 4. Global Theme Control (Light Mode Default)
+* **Default Light Theme**: The application defaults to Light theme globally on all devices and initial page loads, ignoring automated dark preferences (`prefers-color-scheme: dark`) to ensure a crisp, high-contrast, unified landing.
 * **Consistent Variables**: Added `.dark-theme` variable overrides to the CSS root variables in `index.css`.
 * **Theme-Adaptable Layouts**: Modified the sidebar, navbar, dashboard panels, and lobby card layouts to use CSS theme variables (`var(--bg-main)`, `var(--text-main)`) instead of hardcoded white backgrounds.
-* **System Matcher & Listener**: Added media query change listeners on the client to automatically adjust appearance when the user selects the "system" theme preference.
 
-### 5. Authentic Testimonials
-* **Jane Cooper Removal**: Replaced the generic placeholder "Jane Cooper" quote on the login screen with a professional testimonial detailing IntellMeet's automated Groq summary integrations.
+### 5. Stateless Password Reset Flow
+* **Stateless JWT Tokens**: Implemented a password reset flow that generates a short-lived 10-minute JWT reset token on the backend to avoid storing reset states in the database.
+* **Email Reset Simulation**: In development, once the request is triggered, the app exposes a simulation button on-screen to easily route to the reset view with the token query parameter.
+* **Interactive Complexity Checklist**: The Reset Password view displays a real-time complexity status checklist checking for at least 8 characters, 1 uppercase, 1 lowercase, 1 digit, and 1 symbol.
+* **Session Revocation**: Resetting the password automatically removes all existing active logins/tokens to safeguard the account.
+
+### 6. Landing Page Simplifications
+* **Streamlined Access**: Removed redundant "Get Started Free" from Navbar, "Start Free Trial" & "Watch Demo" buttons from Hero, and "Start Free Trial" card button from Pricing sections to direct users cleanly to sign-in/registration options.
 
 ---
 
