@@ -6,7 +6,7 @@
 ## 📋 Project Identity
 * Title: IntellMeet – AI-Powered Enterprise Meeting & Collaboration Platform
 * Subtitle: Production-Grade Full-Stack MERN Application with Real-Time Video, AI Meeting Intelligence & Team Collaboration
-* Author: Shanjivkkumar Ramasamy | Dhvani Padaliya
+* Authors: Shanjivkkumar Ramasamy | Dhvani Padaliya
 * Domain: Web Development (MERN) Domain Portfolio Reference
 * Date: May/June 2026
 * Version: *2.0 – Industry Edition*
