@@ -61,9 +61,9 @@ app.use(
   })
 );
 
-// Payload size limitations to shield against Denial-of-Service (DoS) attacks
-app.use(express.json({ limit: '10kb' })); 
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+// Payload size limitations to shield against Denial-of-Service (DoS) attacks (increased to 5mb to support Base64 avatar uploads)
+app.use(express.json({ limit: '5mb' })); 
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
 // Custom lightweight logging middleware to track HTTP requests in development
 app.use((req, res, next) => {

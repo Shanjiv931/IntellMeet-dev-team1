@@ -71,8 +71,8 @@ export default function VideoCard({
           </div>
         ) : isCameraOff ? (
           <div className="video-off-container">
-            <div className="avatar-ellipse" style={initials && (initials.startsWith('http') || initials.startsWith('/')) ? { padding: 0, overflow: 'hidden' } : {}}>
-              {initials && (initials.startsWith('http') || initials.startsWith('/')) ? (
+            <div className="avatar-ellipse" style={initials && (initials.startsWith('http') || initials.startsWith('/') || initials.startsWith('data:')) ? { padding: 0, overflow: 'hidden' } : {}}>
+              {initials && (initials.startsWith('http') || initials.startsWith('/') || initials.startsWith('data:')) ? (
                 <img src={initials} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
               ) : (
                 <span className="avatar-initials">{initials}</span>
@@ -119,8 +119,8 @@ export default function VideoCard({
                 </span>
               </div>
             )}
-            <div className="feed-avatar-glow" style={initials && (initials.startsWith('http') || initials.startsWith('/')) ? { padding: 0, overflow: 'hidden' } : {}}>
-              {initials && (initials.startsWith('http') || initials.startsWith('/')) ? (
+            <div className="feed-avatar-glow" style={initials && (initials.startsWith('http') || initials.startsWith('/') || initials.startsWith('data:')) ? { padding: 0, overflow: 'hidden' } : {}}>
+              {initials && (initials.startsWith('http') || initials.startsWith('/') || initials.startsWith('data:')) ? (
                 <img src={initials} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
               ) : (
                 <span className="feed-initials">{initials}</span>

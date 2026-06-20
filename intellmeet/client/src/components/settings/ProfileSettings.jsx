@@ -10,6 +10,21 @@ export default function ProfileSettings({
   profileRole,
   handleProfileSave
 }) {
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Image must be smaller than 2MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileAvatar(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="settings-pane animate-fade-in">
       <div className="pane-header">
@@ -29,15 +44,24 @@ export default function ProfileSettings({
               )}
             </div>
             <div className="avatar-input-group">
+              <label className="form-label">Upload Profile Picture</label>
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={handleFileChange}
+                className="settings-input"
+                style={{ padding: '6px 10px', height: 'auto' }}
+              />
+              <div style={{ margin: '4px 0', fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', fontWeight: 'bold' }}>- OR -</div>
               <label className="form-label">Avatar URL</label>
               <input 
                 type="url" 
-                value={profileAvatar} 
+                value={profileAvatar && !profileAvatar.startsWith('data:') ? profileAvatar : ''} 
                 onChange={(e) => setProfileAvatar(e.target.value)} 
                 placeholder="https://example.com/avatar.jpg"
                 className="settings-input"
               />
-              <span className="input-helper">Provide a URL link to your custom profile picture</span>
+              <span className="input-helper">Provide a URL link or upload a custom profile picture</span>
             </div>
           </div>
           

@@ -288,8 +288,8 @@ export default function WorkspaceKanban() {
                         <div className="task-card-footer">
                           {/* Assignee Badge */}
                           <div className="task-assignee">
-                            <span className="assignee-avatar" style={task.assignee?.avatar && (task.assignee.avatar.startsWith('http') || task.assignee.avatar.startsWith('/')) ? { padding: 0, overflow: 'hidden' } : {}}>
-                              {task.assignee?.avatar && (task.assignee.avatar.startsWith('http') || task.assignee.avatar.startsWith('/')) ? (
+                            <span className="assignee-avatar" style={task.assignee?.avatar && (task.assignee.avatar.startsWith('http') || task.assignee.avatar.startsWith('/') || task.assignee.avatar.startsWith('data:')) ? { padding: 0, overflow: 'hidden' } : {}}>
+                              {task.assignee?.avatar && (task.assignee.avatar.startsWith('http') || task.assignee.avatar.startsWith('/') || task.assignee.avatar.startsWith('data:')) ? (
                                 <img src={task.assignee.avatar} alt={task.assignee.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                               ) : (
                                 task.assignee?.name 
