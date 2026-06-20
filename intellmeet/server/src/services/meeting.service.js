@@ -4,6 +4,37 @@ import AppError from '../utils/AppError.js';
 import logger from '../utils/logger.js';
 import { memoryStore, isDBConnected } from '../utils/memoryStore.js';
 
+const populateMemoryMeeting = (meeting) => {
+  if (!meeting) return meeting;
+  const hostId = meeting.host && (meeting.host._id || meeting.host).toString();
+  const hostUser = hostId ? memoryStore.users.find(u => u._id.toString() === hostId) : null;
+  
+  const populatedHost = hostUser ? {
+    _id: hostUser._id,
+    name: hostUser.name,
+    email: hostUser.email,
+    role: hostUser.role,
+    avatar: hostUser.avatar || ''
+  } : meeting.host;
+
+  const populatedParticipants = (meeting.participants || []).map(pId => {
+    const pUser = memoryStore.users.find(u => u._id.toString() === (pId._id || pId).toString());
+    return pUser ? {
+      _id: pUser._id,
+      name: pUser.name,
+      email: pUser.email,
+      role: pUser.role,
+      avatar: pUser.avatar || ''
+    } : pId;
+  });
+
+  return {
+    ...meeting,
+    host: populatedHost,
+    participants: populatedParticipants
+  };
+};
+
 /**
  * Create a new meeting
  */
@@ -49,7 +80,7 @@ export const createMeeting = async ({ title, description, hostId, startTime, end
 
   memoryStore.meetings.push(mockMeeting);
   logger.info(`Resilient DB Fallback: Created meeting in-memory: ${mockMeeting._id}`);
-  return mockMeeting;
+  return populateMemoryMeeting(mockMeeting);
 };
 
 /**
@@ -73,10 +104,11 @@ export const getMeetingsForUser = async (userId) => {
   // Memory fallback query
   const stringId = userId.toString();
   const filtered = memoryStore.meetings.filter(m => 
-    (m.host && m.host.toString() === stringId) || 
-    (m.participants && m.participants.some(p => p.toString() === stringId))
+    (m.host && (m.host._id || m.host).toString() === stringId) || 
+    (m.participants && m.participants.some(p => (p._id || p).toString() === stringId))
   );
-  return filtered.sort((a, b) => b.startTime - a.startTime);
+  const populated = filtered.map(m => populateMemoryMeeting(m));
+  return populated.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
 };
 
 /**
@@ -102,7 +134,7 @@ export const getMeetingById = async (meetingId) => {
   if (!meeting) {
     throw new AppError('Meeting not found in-memory.', 404);
   }
-  return meeting;
+  return populateMemoryMeeting(meeting);
 };
 
 /**
@@ -154,7 +186,7 @@ export const updateMeeting = async (meetingId, updateFields, userId) => {
 
   memoryStore.meetings[index] = updatedMeeting;
   logger.info(`Resilient DB Fallback: Updated meeting in-memory: ${meetingId}`);
-  return updatedMeeting;
+  return populateMemoryMeeting(updatedMeeting);
 };
 
 /**
@@ -235,7 +267,7 @@ export const updateMeetingSummaryInternal = async (meetingId, summaryData) => {
 
   memoryStore.meetings[index] = updatedMeeting;
   logger.info(`Resilient DB Fallback: Updated meeting summary in-memory: ${meetingId}`);
-  return updatedMeeting;
+  return populateMemoryMeeting(updatedMeeting);
 };
 
 /**
@@ -267,12 +299,12 @@ export const addParticipant = async (meetingId, userId) => {
   }
   
   const stringId = userId.toString();
-  if (!meeting.participants.some(p => p.toString() === stringId)) {
+  if (!meeting.participants.some(p => (p._id || p).toString() === stringId)) {
     meeting.participants.push(userId);
   }
   
   meeting.updatedAt = new Date();
   logger.info(`Resilient DB Fallback: Added participant in-memory to meeting: ${meetingId}`);
-  return meeting;
+  return populateMemoryMeeting(meeting);
 };
 

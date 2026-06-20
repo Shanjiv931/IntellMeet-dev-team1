@@ -41,3 +41,23 @@ export const verifyAccessToken = (token) => {
 export const verifyRefreshToken = (token) => {
   return jwt.verify(token, env.JWT_REFRESH_SECRET);
 };
+
+/**
+ * Generate a short-lived password reset JWT token
+ * @param {object} payload - User object attributes to sign (id, email)
+ * @returns {string} Signed JWT token
+ */
+export const generateResetToken = (payload) => {
+  return jwt.sign(payload, env.JWT_SECRET, {
+    expiresIn: '10m', // Recommended for password reset windows
+  });
+};
+
+/**
+ * Verify password reset JWT token
+ * @param {string} token - Signed JWT reset token
+ * @returns {object} Decoded token payload
+ */
+export const verifyResetToken = (token) => {
+  return jwt.verify(token, env.JWT_SECRET);
+};

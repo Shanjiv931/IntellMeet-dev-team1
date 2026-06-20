@@ -26,7 +26,6 @@ export default function Navbar({ onNavigate }) {
 
         <div className="nav-actions">
           <button className="btn-signin" onClick={() => onNavigate('login')}>Sign In</button>
-          <button className="btn-signup" onClick={() => onNavigate('signup')}>Get Started Free</button>
         </div>
 
         <div className="nav-mobile-actions">

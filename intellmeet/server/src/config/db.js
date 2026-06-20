@@ -1,6 +1,14 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
 import env from './env.js';
 import logger from '../utils/logger.js';
+
+// Configure DNS to resolve SRV records on all database connection contexts
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (err) {
+  logger.warn('Failed to set custom DNS servers:', err);
+}
 
 const MAX_RETRY_ATTEMPTS = 5;
 const INITIAL_RETRY_DELAY = 1000; // 1 second

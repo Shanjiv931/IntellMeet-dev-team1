@@ -2,27 +2,52 @@ import React, { useState } from 'react';
 import api from '../utils/api';
 import './Signup.css';
 
-export default function Signup({ onNavigate, onSignupSuccess }) {
+export default function Signup({ onNavigate, onSignupSuccess, defaultEmail = '' }) {
   const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const isLengthValid = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':",./\\|?~`<>]/.test(password);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
+    // Field Validations
+    if (!fullName || !fullName.trim() || fullName.trim().length < 2) {
+      setError("Please enter your full name (minimum 2 characters).");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!isLengthValid || !hasUppercase || !hasLowercase || !hasNumber || !hasSymbol) {
+      setError("Password does not meet all complexity requirements.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-    setError('');
+
     setLoading(true);
 
     try {
       const response = await api.post('/auth/register', { 
-        name: fullName, 
-        email, 
+        name: fullName.trim(), 
+        email: email.trim(), 
         password,
         role: 'MEMBER'
       });
@@ -94,6 +119,39 @@ export default function Signup({ onNavigate, onSignupSuccess }) {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
               />
+              
+              <div className="password-requirements">
+                <p className={isLengthValid ? 'req-met' : 'req-unmet'}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                    {isLengthValid ? <polyline points="20 6 9 17 4 12" /> : <circle cx="12" cy="12" r="10" />}
+                  </svg>
+                  At least 8 characters
+                </p>
+                <p className={hasUppercase ? 'req-met' : 'req-unmet'}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                    {hasUppercase ? <polyline points="20 6 9 17 4 12" /> : <circle cx="12" cy="12" r="10" />}
+                  </svg>
+                  At least 1 uppercase letter
+                </p>
+                <p className={hasLowercase ? 'req-met' : 'req-unmet'}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                    {hasLowercase ? <polyline points="20 6 9 17 4 12" /> : <circle cx="12" cy="12" r="10" />}
+                  </svg>
+                  At least 1 lowercase letter
+                </p>
+                <p className={hasNumber ? 'req-met' : 'req-unmet'}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                    {hasNumber ? <polyline points="20 6 9 17 4 12" /> : <circle cx="12" cy="12" r="10" />}
+                  </svg>
+                  At least 1 number
+                </p>
+                <p className={hasSymbol ? 'req-met' : 'req-unmet'}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                    {hasSymbol ? <polyline points="20 6 9 17 4 12" /> : <circle cx="12" cy="12" r="10" />}
+                  </svg>
+                  At least 1 symbol
+                </p>
+              </div>
             </div>
 
             <div className="form-group">
@@ -120,32 +178,29 @@ export default function Signup({ onNavigate, onSignupSuccess }) {
         </div>
       </div>
 
-      {/* Right panel: Marketing/Testimonial side */}
+      {/* Right panel: Premium Abstract Visualization */}
       <div className="signup-visual-panel">
         <div className="visual-glow"></div>
         <div className="visual-content">
-          <div className="quote-card">
-            <div className="stars">★★★★★</div>
-            <p className="quote-text">
-              "We connected IntellMeet with Slack and Jira. Now, action items are updated before our post-sprint standup even finishes!"
-            </p>
-            <div className="quote-author">
-              <div className="author-avatar bg-teal">AS</div>
-              <div>
-                <div className="author-name">Alex Smith</div>
-                <div className="author-title">Tech Lead, ApexHub</div>
+          <div className="abstract-showcase">
+            <div className="floating-sphere sphere-1"></div>
+            <div className="floating-sphere sphere-2"></div>
+            <div className="glass-card main-glass">
+              <div className="brand-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="brand-logo" style={{ marginRight: '4px' }}>
+                  <path d="M23 7l-7 5 7 5V7z" />
+                  <rect x="1" y="5" width="15" height="14" rx="3" ry="3" />
+                </svg>
+                <span>INTELLMEET AI</span>
               </div>
+              <h3>Collaborate & Automate</h3>
+              <p>Next-generation meeting intelligence, live WebRTC video, and instant AI-generated team actions.</p>
             </div>
-          </div>
-          
-          <div className="metrics-row">
-            <div className="metric-box">
-              <span className="metric-number">10x</span>
-              <span className="metric-label">Faster Summaries</span>
+            <div className="glass-card sub-glass glass-left">
+              <span>Sub-200ms Latency</span>
             </div>
-            <div className="metric-box">
-              <span className="metric-number">5 hrs</span>
-              <span className="metric-label">Saved Weekly Per Team</span>
+            <div className="glass-card sub-glass glass-right">
+              <span>AI Insights</span>
             </div>
           </div>
         </div>

@@ -140,7 +140,9 @@ class ApiClient {
         }
 
         // If unauthorized and we DO NOT have a refresh token, sign out immediately
-        if (isUnauthorized && !this.refreshToken) {
+        // Skip this if it is a login or register request to allow login form to handle 401 errors
+        const isAuthRequest = originalRequest?.url && (originalRequest.url.includes('/auth/login') || originalRequest.url.includes('/auth/register'));
+        if (isUnauthorized && !this.refreshToken && !isAuthRequest) {
           this.clearTokens();
           window.location.reload();
         }

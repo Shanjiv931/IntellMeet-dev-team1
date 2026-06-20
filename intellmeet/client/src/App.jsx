@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Lobby from './pages/Lobby';
 import Room from './pages/Room';
@@ -31,19 +33,37 @@ function App() {
 
   // Track currently active meeting room details
   const [activeMeeting, setActiveMeeting] = useState(null);
+  
+  // Track email to pre-populate on registration redirect
+  const [signupEmail, setSignupEmail] = useState('');
+
+  // Track password reset token
+  const [resetToken, setResetToken] = useState('');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('intellmeet_theme') || 'light';
-    let activeTheme = savedTheme;
-    if (savedTheme === 'system') {
-      activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
+    // Map system preference to light theme directly to enforce light mode by default
+    let activeTheme = savedTheme === 'system' ? 'light' : savedTheme;
     if (activeTheme === 'light') {
       document.body.classList.add('light-theme');
       document.body.classList.remove('dark-theme');
     } else {
       document.body.classList.add('dark-theme');
       document.body.classList.remove('light-theme');
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (token) {
+        setResetToken(token);
+        setView('reset-password');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (e) {
+      console.error('Failed to parse reset token from URL', e);
     }
   }, []);
 
@@ -112,9 +132,21 @@ function App() {
     }
   };
 
-  const handleNavigate = (targetView, meetingData = null) => {
-    if (meetingData) {
-      setActiveMeeting(meetingData);
+  const handleNavigate = (targetView, extraData = null) => {
+    if (targetView === 'signup' && typeof extraData === 'string') {
+      setSignupEmail(extraData);
+    } else if (targetView !== 'signup') {
+      setSignupEmail('');
+    }
+
+    if (targetView === 'reset-password' && typeof extraData === 'string') {
+      setResetToken(extraData);
+    } else if (targetView !== 'reset-password') {
+      setResetToken('');
+    }
+
+    if (extraData && typeof extraData === 'object') {
+      setActiveMeeting(extraData);
     }
     // If explicitly navigating back to landing or login (logout action), clear the stored session
     if (targetView === 'landing' || targetView === 'login') {
@@ -180,7 +212,15 @@ function App() {
   }
 
   if (view === 'signup') {
-    return <Signup onNavigate={handleNavigate} onSignupSuccess={handleSignupSuccess} />;
+    return <Signup onNavigate={handleNavigate} onSignupSuccess={handleSignupSuccess} defaultEmail={signupEmail} />;
+  }
+
+  if (view === 'forgot-password') {
+    return <ForgotPassword onNavigate={handleNavigate} />;
+  }
+
+  if (view === 'reset-password') {
+    return <ResetPassword onNavigate={handleNavigate} token={resetToken} />;
   }
 
   if (view === 'lobby') {

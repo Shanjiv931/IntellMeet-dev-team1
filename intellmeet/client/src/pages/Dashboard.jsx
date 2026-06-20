@@ -395,10 +395,7 @@ export default function Dashboard({ onNavigate, user, activeMeeting, onUserUpdat
   useEffect(() => {
     // 1. Theme
     localStorage.setItem('intellmeet_theme', theme);
-    let activeTheme = theme;
-    if (theme === 'system') {
-      activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
+    let activeTheme = theme === 'system' ? 'light' : theme;
 
     if (activeTheme === 'light') {
       document.body.classList.add('light-theme');
@@ -424,7 +421,7 @@ export default function Dashboard({ onNavigate, user, activeMeeting, onUserUpdat
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
       if (theme === 'system') {
-        const activeTheme = mediaQuery.matches ? 'dark' : 'light';
+        const activeTheme = 'light';
         if (activeTheme === 'light') {
           document.body.classList.add('light-theme');
           document.body.classList.remove('dark-theme');

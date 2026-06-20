@@ -1,38 +1,38 @@
 import React, { useState } from 'react';
 import api from '../utils/api';
-import './Login.css';
+import './ForgotPassword.css';
 
-export default function Login({ onNavigate, onLoginSuccess }) {
+export default function ForgotPassword({ onNavigate }) {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [devToken, setDevToken] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
-    
+
     try {
-      const response = await api.post('/auth/login', { email, password, rememberMe });
-      onLoginSuccess(response.data, rememberMe);
-    } catch (err) {
-      if (err.status === 404) {
-        onNavigate('signup', email);
-      } else {
-        setError(err.message || 'Invalid email or password. Please try again.');
+      const response = await api.post('/auth/forgot-password', { email: email.trim() });
+      if (response.success && response.data) {
+        setSuccess('A password reset link has been successfully generated and sent to your email.');
+        // Store dev token for testing simulation
+        setDevToken(response.data.token || '');
       }
+    } catch (err) {
+      setError(err.message || 'Failed to process request. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-page">
-      {/* Left panel: Login form */}
-      <div className="login-form-panel">
-        <div className="login-form-header">
+    <div className="forgot-password-page">
+      <div className="forgot-password-panel">
+        <div className="forgot-password-header">
           <a href="#" className="nav-logo" onClick={(e) => { e.preventDefault(); onNavigate('landing'); }}>
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="32" height="32" rx="8" fill="#2563EB"/>
@@ -44,67 +44,52 @@ export default function Login({ onNavigate, onLoginSuccess }) {
           </a>
         </div>
 
-        <div className="login-form-container">
-          <h2>Welcome back</h2>
-          <p className="subtitle">Enter your credentials to access your meeting dashboard</p>
+        <div className="forgot-password-container">
+          <h2>Reset password</h2>
+          <p className="subtitle">Enter your email and we'll help you configure a new password</p>
 
           {error && <div className="error-alert-box">{error}</div>}
+          {success && <div className="success-alert-box">{success}</div>}
 
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="form-group">
-              <label htmlFor="email">Email Address</label>
-              <input
-                type="email"
-                id="email"
-                required
-                placeholder="you@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="form-group">
-              <div className="label-row">
-                <label htmlFor="password">Password</label>
-                <a href="#" className="forgot-link" onClick={(e) => { e.preventDefault(); onNavigate('forgot-password'); }}>Forgot password?</a>
-              </div>
-              <input
-                type="password"
-                id="password"
-                required
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="form-options">
-              <label className="remember-me">
+          {!success ? (
+            <form onSubmit={handleSubmit} className="auth-form">
+              <div className="form-group">
+                <label htmlFor="email">Email Address</label>
                 <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  type="email"
+                  id="email"
+                  required
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
                 />
-                <span>Remember me for 30 days</span>
-              </label>
+              </div>
+
+              <button type="submit" className="btn-forgot-submit" disabled={loading}>
+                {loading ? 'Sending Request...' : 'Send Reset Link'}
+              </button>
+            </form>
+          ) : (
+            <div className="dev-simulation-card">
+              <p>For development and testing convenience, click the button below to simulate clicking the email link and configuring your new password.</p>
+              <button 
+                className="btn-dev-simulate"
+                onClick={() => onNavigate('reset-password', devToken)}
+              >
+                Reset Password
+              </button>
             </div>
+          )}
 
-            <button type="submit" className="btn-signin-submit" disabled={loading}>
-              {loading ? 'Signing In...' : 'Sign In'}
-            </button>
-          </form>
-
-          <p className="signup-prompt">
-            Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('signup'); }}>Sign up for free</a>
+          <p className="back-prompt">
+            Remembered your password? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('login'); }}>Sign in</a>
           </p>
         </div>
       </div>
 
       {/* Right panel: Premium Abstract Visualization */}
-      <div className="login-visual-panel">
+      <div className="forgot-password-visual-panel">
         <div className="visual-glow"></div>
         <div className="visual-content">
           <div className="abstract-showcase">

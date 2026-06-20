@@ -84,9 +84,11 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              <button className={`btn-pricing-cta ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}>
-                {plan.cta}
-              </button>
+              {plan.cta !== "Start Free Trial" && (
+                <button className={`btn-pricing-cta ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}>
+                  {plan.cta}
+                </button>
+              )}
             </div>
           ))}
         </div>

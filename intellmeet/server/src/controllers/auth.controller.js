@@ -140,3 +140,44 @@ export const uploadAvatar = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Generate password reset token
+ * POST /api/auth/forgot-password
+ */
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      throw new AppError('Please supply an email address.', 400);
+    }
+    const result = await authService.forgotPassword(email);
+    res.status(200).json({
+      success: true,
+      message: 'Password reset token generated.',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Reset password using token
+ * POST /api/auth/reset-password
+ */
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      throw new AppError('Missing token or password parameters.', 400);
+    }
+    await authService.resetPassword(token, password);
+    res.status(200).json({
+      success: true,
+      message: 'Password successfully changed and updated in database.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};

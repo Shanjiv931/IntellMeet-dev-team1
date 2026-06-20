@@ -11,6 +11,8 @@ const router = Router();
 router.post('/register', authRateLimiter, authController.register);
 router.post('/login', authRateLimiter, authController.login);
 router.post('/refresh', authRateLimiter, authController.refresh);
+router.post('/forgot-password', authRateLimiter, authController.forgotPassword);
+router.post('/reset-password', authRateLimiter, authController.resetPassword);
 
 /**
  * Protected Authentication Routes (Requires valid Bearer JWT header authorization)
